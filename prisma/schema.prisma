@@ -20,6 +20,7 @@ model User {
   mediaCompletions   MediaCompletion[]
   assessmentAttempts AssessmentAttempt[]
   certificates       Certificate[]
+  surveyResponses    SurveyResponse[]
 }
 
 
@@ -34,6 +35,7 @@ model Course {
   modules     Module[]
   progresses  CourseProgress[]
   certificates Certificate[]
+  survey       Survey?
 }
 
 model Module {
@@ -135,4 +137,33 @@ model Certificate {
   course           Course   @relation(fields: [courseId], references: [id])
 
   @@unique([userId, courseId])
+}
+
+model Survey {
+  id        String           @id @default(cuid())
+  courseId  String           @unique
+  course    Course           @relation(fields: [courseId], references: [id])
+  questions SurveyQuestion[]
+  responses SurveyResponse[]
+}
+
+model SurveyQuestion {
+  id        String   @id @default(cuid())
+  surveyId  String
+  survey    Survey   @relation(fields: [surveyId], references: [id])
+  text      String
+  order     Int
+  type      String   @default("TEXT") // TEXT, RATING, etc.
+}
+
+model SurveyResponse {
+  id        String   @id @default(cuid())
+  surveyId  String
+  userId    String
+  answers   String   // JSON containing questionId -> answer mapping
+  createdAt DateTime @default(now())
+  survey    Survey   @relation(fields: [surveyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, surveyId])
 }

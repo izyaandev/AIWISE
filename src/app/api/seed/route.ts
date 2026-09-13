@@ -6,6 +6,9 @@ export async function GET() {
   try {
     // 1. Wipe existing data for a clean slate
     await prisma.certificate.deleteMany();
+    await prisma.surveyResponse.deleteMany();
+    await prisma.surveyQuestion.deleteMany();
+    await prisma.survey.deleteMany();
     await prisma.courseProgress.deleteMany();
     await prisma.mediaCompletion.deleteMany();
     await prisma.assessmentAttempt.deleteMany();
@@ -136,6 +139,22 @@ Take your time to understand these concepts before proceeding to the assessment.
                 ]
               }
             }
+          ]
+        }
+      }
+    });
+
+    // 4. Create the Post-Course Survey with 5 Placeholder Questions
+    await prisma.survey.create({
+      data: {
+        courseId: course.id,
+        questions: {
+          create: [
+            { order: 1, text: 'How satisfied are you with the course content?', type: 'RATING' },
+            { order: 2, text: 'Did the course meet your expectations?', type: 'TEXT' },
+            { order: 3, text: 'What was your favorite part of the course?', type: 'TEXT' },
+            { order: 4, text: 'How can we improve this course?', type: 'TEXT' },
+            { order: 5, text: 'Would you recommend this course to a friend?', type: 'RATING' },
           ]
         }
       }

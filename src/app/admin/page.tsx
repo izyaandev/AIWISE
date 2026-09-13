@@ -24,6 +24,7 @@ export default async function AdminPage() {
     courses,
     recentUsers,
     userProgress,
+    surveys,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: 'STUDENT' } }),
@@ -52,6 +53,14 @@ export default async function AdminPage() {
         mediaCompletions: { where: { isCompleted: true } },
       },
       orderBy: { createdAt: 'desc' },
+    }),
+    prisma.survey.findMany({
+      include: {
+        course: true,
+        _count: {
+          select: { responses: true }
+        }
+      }
     }),
   ]);
 
@@ -194,6 +203,32 @@ export default async function AdminPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </Card>
+      </div>
+
+      {/* Survey Results */}
+      <div style={{ marginBottom: '80px' }}>
+        <div style={{ marginBottom: '32px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '16px' }}>
+          <h2 className="heading-3" style={{ color: 'var(--color-ink)' }}>Survey Results</h2>
+          <p className="body-sm" style={{ color: 'var(--color-slate)', marginTop: '8px' }}>Export post-course survey responses collected from students.</p>
+        </div>
+        <Card variant="base" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {surveys.map(survey => (
+              <div key={survey.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid var(--color-hairline)', borderRadius: '8px' }}>
+                <div>
+                  <h3 className="heading-3" style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{survey.course.title}</h3>
+                  <p className="body-sm" style={{ color: 'var(--color-slate)' }}>{survey._count.responses} responses collected</p>
+                </div>
+                <Link href={`/api/admin/export-survey?surveyId=${survey.id}`} target="_blank">
+                  <Button variant="secondary">Download Excel (CSV)</Button>
+                </Link>
+              </div>
+            ))}
+            {surveys.length === 0 && (
+              <p className="body-md" style={{ color: 'var(--color-slate)', textAlign: 'center' }}>No surveys created yet.</p>
+            )}
           </div>
         </Card>
       </div>

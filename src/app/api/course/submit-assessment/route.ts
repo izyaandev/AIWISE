@@ -107,14 +107,8 @@ export async function POST(req: Request) {
       });
 
       if (courseIsCompleted) {
-        await prisma.certificate.upsert({
-          where: { userId_courseId: { userId: (session.user as any).id, courseId } },
-          update: {},
-          create: {
-            userId: (session.user as any).id,
-            courseId,
-          }
-        });
+        // We no longer generate the certificate here. 
+        // It will be generated after the post-course survey is completed.
       }
     }
 
