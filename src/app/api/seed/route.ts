@@ -42,7 +42,7 @@ export async function GET() {
     });
 
     // 3. Create Course with proper content, 30s dwell time, and 5 questions
-    await prisma.course.create({
+    const course = await prisma.course.create({
       data: {
         title: 'AI Ethics, Safety & Alignment',
         description: 'A comprehensive curriculum on responsible AI usage, understanding algorithmic bias, exploring existential risks, and aligning artificial intelligence with human values and ethics.',
