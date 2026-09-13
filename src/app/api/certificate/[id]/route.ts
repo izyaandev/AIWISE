@@ -38,7 +38,11 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
     const templatePath = path.join(process.cwd(), 'public', 'certificate_template.png');
     if (fs.existsSync(templatePath)) {
       const templateBytes = fs.readFileSync(templatePath);
-      const templateImg = await pdfDoc.embedPng(templateBytes);
+      // Detect actual format by magic bytes (image may be JPEG despite .png extension)
+      const isJpeg = templateBytes[0] === 0xff && templateBytes[1] === 0xd8;
+      const templateImg = isJpeg
+        ? await pdfDoc.embedJpg(templateBytes)
+        : await pdfDoc.embedPng(templateBytes);
       page.drawImage(templateImg, { x: 0, y: 0, width, height });
     } else {
       // Fallback plain background
@@ -49,7 +53,10 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
     const logoPath = path.join(process.cwd(), 'public', 'al_warqaa_logo.png');
     if (fs.existsSync(logoPath)) {
       const logoBytes = fs.readFileSync(logoPath);
-      const logoImg = await pdfDoc.embedPng(logoBytes);
+      const logoIsJpeg = logoBytes[0] === 0xff && logoBytes[1] === 0xd8;
+      const logoImg = logoIsJpeg
+        ? await pdfDoc.embedJpg(logoBytes)
+        : await pdfDoc.embedPng(logoBytes);
       page.drawImage(logoImg, { x: 54, y: 54, width: 64, height: 64 });
     }
 
