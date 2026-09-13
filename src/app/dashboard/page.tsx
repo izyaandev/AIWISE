@@ -86,7 +86,7 @@ export default async function DashboardPage() {
                 )}
               </div>
               
-              <h3 className="heading-3" style={{ marginBottom: '16px', paddingRight: '40px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '16px' }}>
+              <h3 className="heading-3" style={{ marginBottom: '16px', paddingRight: '110px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '16px', wordWrap: 'break-word' }}>
                 {progress.course.title}
               </h3>
               

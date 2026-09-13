@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 
 export default function LessonViewer({ lesson, courseId, initialCompletion, nextLessonId }: any) {
   const router = useRouter();
@@ -100,11 +101,9 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
         )}
         
         {lesson.content && (
-          <div 
-            className="body-lg" 
-            style={{ whiteSpace: 'pre-wrap', color: 'var(--color-ink)', lineHeight: '1.8' }}
-            dangerouslySetInnerHTML={{ __html: lesson.content }} // Note: in production use DOMPurify or similar if content is untrusted
-          />
+          <div className="body-md markdown-content" style={{ color: 'var(--color-ink)', lineHeight: '1.7' }}>
+            <ReactMarkdown>{lesson.content}</ReactMarkdown>
+          </div>
         )}
       </Card>
 

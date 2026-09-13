@@ -82,3 +82,11 @@ p {
 a {
   color: inherit;
 }
+
+.markdown-content h1 { font-size: 2rem; margin-top: 2rem; margin-bottom: 1rem; font-weight: 700; color: var(--color-ink); } 
+.markdown-content h2 { font-size: 1.5rem; margin-top: 1.5rem; margin-bottom: 0.75rem; font-weight: 600; color: var(--color-ink); } 
+.markdown-content h3 { font-size: 1.25rem; margin-top: 1.25rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-ink); } 
+.markdown-content p { margin-bottom: 1rem; } 
+.markdown-content ul, .markdown-content ol { margin-bottom: 1rem; padding-left: 2rem; } 
+.markdown-content li { margin-bottom: 0.25rem; } 
+.markdown-content strong { font-weight: 700; }
