@@ -9,8 +9,9 @@ import path from 'path';
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
-    backgroundColor: '#FAF7F2',
+    backgroundColor: '#0F172A', // dark slate
     position: 'relative',
+    color: '#F8FAFC',
   },
   background: {
     position: 'absolute',
@@ -18,91 +19,90 @@ const styles = StyleSheet.create({
     left: 0,
     width: '100%',
     height: '100%',
+    opacity: 0.1, // tech texture effect if they provide a texture
   },
   container: {
     flex: 1,
-    padding: 50,
+    padding: 40,
     display: 'flex',
     flexDirection: 'column',
+    border: '2px solid #38BDF8', // electric blue border
+    margin: 20,
   },
   headerRow: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: 60,
-    backgroundColor: '#3B2A1A',
-    paddingHorizontal: 20,
-    marginTop: 20,
-    marginHorizontal: -20, // stretch beyond padding slightly
-  },
-  logo: {
-    width: 50,
-    height: 50,
-  },
-  aiwiseText: {
-    fontSize: 24,
-    color: '#A88B69',
-    fontWeight: 'bold',
-  },
-  wiseText: {
-    color: '#FFFFFF',
-  },
-  schoolName: {
-    fontSize: 10,
-    color: '#FFFFFF',
-  },
-  goldLine: {
-    height: 2,
-    backgroundColor: '#A88B69',
-    marginVertical: 40,
-    width: '100%',
-  },
-  certTitle: {
-    fontSize: 12,
-    color: '#3B2A1A',
-    textAlign: 'center',
-    letterSpacing: 2,
     marginBottom: 40,
   },
+  logo: {
+    width: 60,
+    height: 60,
+  },
+  aiwiseText: {
+    fontSize: 32,
+    color: '#38BDF8',
+    fontWeight: 'bold',
+    letterSpacing: 2,
+  },
+  wiseText: {
+    color: '#F8FAFC',
+  },
+  schoolName: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  certTitle: {
+    fontSize: 14,
+    color: '#38BDF8',
+    textAlign: 'center',
+    letterSpacing: 4,
+    marginBottom: 40,
+    textTransform: 'uppercase',
+  },
   studentName: {
-    fontSize: 36,
-    color: '#3B2A1A',
+    fontSize: 48,
+    color: '#FFFFFF',
     textAlign: 'center',
     fontWeight: 'bold',
-    fontFamily: 'Times-Bold',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
   nameUnderline: {
-    height: 2,
-    backgroundColor: '#A88B69',
-    width: '60%',
+    height: 1,
+    backgroundColor: '#38BDF8',
+    width: '80%',
     alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 30,
+    marginTop: 15,
+    marginBottom: 40,
   },
   completionText: {
-    fontSize: 12,
-    color: '#3B2A1A',
+    fontSize: 14,
+    color: '#94A3B8',
     textAlign: 'center',
     marginBottom: 20,
+    letterSpacing: 1,
   },
   courseTitle: {
-    fontSize: 24,
-    color: '#A88B69',
+    fontSize: 28,
+    color: '#38BDF8',
     textAlign: 'center',
     fontWeight: 'bold',
-    fontFamily: 'Times-Bold',
-    paddingHorizontal: 50,
+    paddingHorizontal: 40,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   footer: {
-    position: 'absolute',
-    bottom: 50,
-    left: 50,
-    right: 50,
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    marginTop: 'auto',
+    borderTop: '1px solid #1E293B',
+    paddingTop: 20,
   },
   signatureBlock: {
     display: 'flex',
@@ -110,58 +110,54 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   signatureText: {
-    fontSize: 22,
-    fontFamily: 'Times-Italic',
-    color: '#3B2A1A',
-    marginBottom: 5,
+    fontSize: 24,
+    color: '#F8FAFC',
+    marginBottom: 10,
   },
   signatureLine: {
     height: 1,
-    backgroundColor: '#3B2A1A',
-    width: 150,
-    marginBottom: 5,
+    backgroundColor: '#38BDF8',
+    width: 180,
+    marginBottom: 8,
   },
   footerTitle: {
-    fontSize: 10,
-    color: '#A88B69',
-    fontWeight: 'bold',
-    marginBottom: 2,
+    fontSize: 9,
+    color: '#38BDF8',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   footerText: {
-    fontSize: 10,
-    color: '#3B2A1A',
+    fontSize: 12,
+    color: '#94A3B8',
   },
   centerBlock: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  rightBlock: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
   },
   watermark: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 25,
     left: 0,
     right: 0,
     textAlign: 'center',
-    fontSize: 8,
-    color: '#999999',
+    fontSize: 9,
+    color: '#334155',
+    letterSpacing: 2,
+    fontFamily: 'Courier',
   }
 });
 
 const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
   const studentName = (certificate.user.name || certificate.user.email).toUpperCase();
-  const dateStr = certificate.issuedAt.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
-  const verifyUrl = `aiwise.school/verify/${certificate.verificationToken.substring(0, 8)}...`;
+  const dateStr = certificate.issuedAt.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        {/* Background Image */}
-        {templateSrc && <PdfImage src={templateSrc} style={styles.background} />}
+        {/* By adding fixed=true, React-PDF treats the image as a background without breaking flow */}
+        {templateSrc && <PdfImage src={templateSrc} style={styles.background} fixed={true} />}
 
         <View style={styles.container}>
           {/* Header */}
@@ -171,44 +167,33 @@ const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
             {logoSrc ? <PdfImage src={logoSrc} style={styles.logo} /> : <View style={styles.logo} />}
           </View>
 
-          <View style={styles.goldLine} />
-
           {/* Body */}
-          <Text style={styles.certTitle}>THIS CERTIFICATE IS PROUDLY AWARDED TO</Text>
+          <Text style={styles.certTitle}>Certificate of Excellence</Text>
           
           <Text style={styles.studentName}>{studentName}</Text>
           <View style={styles.nameUnderline} />
 
-          <Text style={styles.completionText}>for successfully completing the curriculum and requirements of:</Text>
+          <Text style={styles.completionText}>HAS SUCCESSFULLY COMPLETED THE RIGOROUS REQUIREMENTS OF</Text>
           
           <Text style={styles.courseTitle}>{certificate.course.title}</Text>
 
-          {/* Footer absolute positioning inside container isn't great, let's use flex */}
-          <View style={{ flexGrow: 1 }} />
-          
-          <View style={{ height: 1, backgroundColor: '#A88B69', width: '100%', marginBottom: 20 }} />
-
-          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          {/* Footer */}
+          <View style={styles.footer}>
             <View style={styles.signatureBlock}>
               <Text style={styles.signatureText}>S. Thomas</Text>
               <View style={styles.signatureLine} />
-              <Text style={styles.footerTitle}>Authorized By:</Text>
+              <Text style={styles.footerTitle}>Authorized By</Text>
               <Text style={styles.footerText}>Sanjeev Thomas, Principal</Text>
             </View>
 
             <View style={styles.centerBlock}>
-              <Text style={styles.footerTitle}>Date of Issue</Text>
+              <Text style={styles.footerTitle}>Issue Date</Text>
               <Text style={styles.footerText}>{dateStr}</Text>
-            </View>
-
-            <View style={styles.rightBlock}>
-              <Text style={styles.footerTitle}>Verify this certificate at:</Text>
-              <Text style={styles.footerText}>{verifyUrl}</Text>
             </View>
           </View>
         </View>
 
-        <Text style={styles.watermark}>Certificate ID: {certificate.id}</Text>
+        <Text style={styles.watermark}>CERT_ID: {certificate.id}</Text>
       </Page>
     </Document>
   );
