@@ -122,13 +122,17 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
       )}
 
       {/* Basic Assessment UI Integration Placeholder */}
-      {lesson.assessments?.length > 0 && (
+      {!completed && lesson.assessments?.length > 0 && (
         <Card variant="base" style={{ marginBottom: '48px', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-hairline-strong)' }}>
           <h3 className="heading-3" style={{ marginBottom: '16px', color: 'var(--color-ink)' }}>Assessment Required</h3>
           <p className="body-md" style={{ marginBottom: '32px', color: 'var(--color-slate)' }}>Take the quiz to complete this lesson.</p>
-          <Link href={`/course/${courseId}/lesson/${lesson.id}/quiz/${lesson.assessments[0].id}`}>
-            <Button variant="primary" className="lg" style={{ padding: '12px 32px' }}>Start Quiz</Button>
-          </Link>
+          {dwellTime < targetDwellTime ? (
+            <Button variant="secondary" className="lg" disabled style={{ padding: '12px 32px' }}>Please finish reading first</Button>
+          ) : (
+            <Link href={`/course/${courseId}/lesson/${lesson.id}/quiz/${lesson.assessments[0].id}`}>
+              <Button variant="primary" className="lg" style={{ padding: '12px 32px' }}>Start Quiz</Button>
+            </Link>
+          )}
         </Card>
       )}
 

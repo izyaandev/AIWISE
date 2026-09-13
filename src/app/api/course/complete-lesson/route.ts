@@ -15,6 +15,11 @@ export async function POST(req: Request) {
 
     const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
+      include: {
+        _count: {
+          select: { assessments: true }
+        }
+      }
     });
 
     if (!lesson) {
@@ -27,6 +32,11 @@ export async function POST(req: Request) {
       isCompleted = percentageWatched >= 90;
     } else if (lesson.minimumDwellTime) {
       isCompleted = dwellTimeSeconds >= lesson.minimumDwellTime;
+    }
+
+    // If the lesson has a quiz, it CANNOT be completed just by waiting
+    if (lesson._count.assessments > 0) {
+      isCompleted = false;
     }
 
     // Upsert media completion
