@@ -55,7 +55,6 @@ export default function CreateCourseForm() {
   };
 
   return (
-  return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <label className="body-md" style={{ fontWeight: 600 }}>Course Title</label>
