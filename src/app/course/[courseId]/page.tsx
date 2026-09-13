@@ -103,9 +103,13 @@ export default async function CourseOverviewPage(props: { params: Promise<{ cour
           ) : (
             <div style={{ display: 'flex', gap: '16px' }}>
               <Button variant="secondary" className="lg" disabled>Course Completed</Button>
-              {certificate && (
+              {certificate ? (
                 <Link href={`/api/certificate/${certificate.id}`} target="_blank" aria-label="Download Certificate">
                   <Button variant="primary" className="lg">Download Certificate</Button>
+                </Link>
+              ) : (
+                <Link href={`/course/${course.id}/survey`}>
+                  <Button variant="primary" className="lg" style={{ backgroundColor: 'var(--color-success)' }}>Take Final Survey</Button>
                 </Link>
               )}
             </div>
