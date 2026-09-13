@@ -37,8 +37,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 120,
+    height: 120,
   },
   aiwiseText: {
     fontSize: 32,
