@@ -50,6 +50,7 @@ export default function SurveyPage({ params }: { params: Promise<{ courseId: str
       const data = await res.json();
       if (data.success) {
         // Redirect to dashboard to view certificate
+        router.refresh();
         router.push('/dashboard');
       } else {
         alert(data.error || 'Failed to submit survey');

@@ -67,6 +67,7 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
       
       if (res.ok) {
         setCompleted(true);
+        router.refresh();
       }
     } catch (err) {
       console.error(err);
@@ -143,7 +144,7 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
               <Button variant="primary" className="lg">Next Lesson →</Button>
             </Link>
           ) : (
-            <Link href={`/course/${courseId}`}>
+            <Link href={`/course/${courseId}`} onClick={() => router.refresh()}>
               <Button variant="primary" className="lg">Finish Course ★</Button>
             </Link>
           )
