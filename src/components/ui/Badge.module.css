@@ -1,0 +1,42 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  padding: 4px 12px;
+}
+
+.base {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+}
+
+.tagGreen {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.tagOrange {
+  background-color: var(--color-warning);
+  color: white;
+}
+
+.tagBlue {
+  background-color: var(--color-slate);
+  color: white;
+}
+
+.tagPurple {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.tagPink {
+  background-color: var(--color-accent);
+  color: white;
+}

@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Neo-Brutalist Maximalist Palette */
+  --color-primary: #FF3366; /* Hot Pink */
+  --color-on-primary: #000000;
+  
+  --color-secondary: #00E5FF; /* Cyan */
+  --color-on-secondary: #000000;
+
+  --color-accent: #FFEA00; /* Neon Yellow */
+  
+  --color-canvas: #FFFFFF; /* Stark White */
+  --color-surface: #F0F0F0; /* Light Gray */
+  --color-surface-soft: #FFFFFF;
+  
+  --color-ink: #000000; /* Pure Black */
+  --color-slate: #333333; /* Dark Gray */
+  --color-steel: #555555;
+  
+  --color-hairline: #000000; /* Thick Black Borders */
+  --color-hairline-strong: #000000;
+  
+  --color-semantic-error: #FF0000;
+  --color-semantic-success: #00FF00;
+  --color-semantic-warning: #FF7700;
+  --color-semantic-info: #0055FF;
+  
+  --color-brand-purple: #9D00FF;
+  --color-brand-purple-800: #000000;
+  --color-brand-pink: #FF3366;
+  --color-brand-orange: #FF7700;
+  --color-brand-orange-deep: #000000;
+  --color-brand-green: #00FF00;
+  /* Maximalist Luxury Palette */
+  --color-canvas: #f8f5f0; /* Rich parchment */
+  --color-surface: #ffffff;
+  --color-ink: #2a2520; /* Deep espresso */
+  --color-slate: #5a524a;
+  
+  --color-primary: #a88b69; /* Soft gold / taupe */
+  --color-primary-dark: #8a7051;
+  --color-accent: #c4a983; 
+  --color-error: #c96c6c;
+  --color-success: #6cc98d;
+  --color-warning: #d6ae5e;
+
+  /* Maximalist Borders & Shadows */
+  --color-hairline: rgba(168, 139, 105, 0.2);
+  --color-hairline-strong: rgba(168, 139, 105, 0.4);
+  --shadow-sm: 0 2px 8px rgba(42, 37, 32, 0.05);
+  --shadow-md: 0 4px 16px rgba(42, 37, 32, 0.08);
+  --shadow-lg: 0 12px 32px rgba(42, 37, 32, 0.12);
+  --shadow-inset: inset 0 2px 4px rgba(255, 255, 255, 0.5), inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23a88b69" fill-opacity="0.03" fill-rule="evenodd"%3E%3Ccircle cx="3" cy="3" r="3"/%3E%3Ccircle cx="13" cy="13" r="3"/%3E%3C/g%3E%3C/svg%3E');
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Georgia', serif;
+  color: var(--color-ink);
+  margin-top: 0;
+}
+
+h1 { font-size: 3.5rem; letter-spacing: -0.5px; line-height: 1.1; }
+h2 { font-size: 2.5rem; letter-spacing: -0.5px; line-height: 1.2; }
+h3 { font-size: 1.75rem; line-height: 1.3; }
+
+p {
+  margin: 0 0 1rem 0;
+  line-height: 1.7;
+}
+
+a {
+  color: inherit;
+}

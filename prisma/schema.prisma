@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  name               String?
+  passwordHash       String
+  role               String              @default("STUDENT") // STUDENT or ADMIN
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  courseProgresses   CourseProgress[]
+  mediaCompletions   MediaCompletion[]
+  assessmentAttempts AssessmentAttempt[]
+  certificates       Certificate[]
+}
+
+
+
+model Course {
+  id          String           @id @default(cuid())
+  title       String
+  description String
+  syllabus    String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  modules     Module[]
+  progresses  CourseProgress[]
+  certificates Certificate[]
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  course      Course   @relation(fields: [courseId], references: [id])
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id               String            @id @default(cuid())
+  moduleId         String
+  title            String
+  content          String? // Markdown or HTML content
+  mediaType        String? // VIDEO or AUDIO
+  mediaUrl         String?
+  minimumDwellTime Int? // In seconds (e.g. 30s)
+  order            Int
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  module           Module            @relation(fields: [moduleId], references: [id])
+  mediaCompletions MediaCompletion[]
+  assessments      Assessment[]
+}
+
+
+
+model MediaCompletion {
+  id                 String   @id @default(cuid())
+  userId             String
+  lessonId           String
+  percentageWatched  Float    @default(0)
+  isCompleted        Boolean  @default(false)
+  dwellTimeSeconds   Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id])
+  lesson             Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+model CourseProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  courseId        String
+  lessonsCompleted Int      @default(0)
+  overallPercentage Float    @default(0)
+  isCompleted     Boolean  @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+  course          Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model Assessment {
+  id        String              @id @default(cuid())
+  lessonId  String
+  title     String
+  questions Question[]
+  attempts  AssessmentAttempt[]
+  lesson    Lesson              @relation(fields: [lessonId], references: [id])
+}
+
+model Question {
+  id            String     @id @default(cuid())
+  assessmentId  String
+  text          String
+  options       String // JSON array
+  correctOption String
+  assessment    Assessment @relation(fields: [assessmentId], references: [id])
+}
+
+model AssessmentAttempt {
+  id           String     @id @default(cuid())
+  userId       String
+  assessmentId String
+  score        Float
+  passed       Boolean
+  createdAt    DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id])
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+}
+
+model Certificate {
+  id               String   @id @default(cuid())
+  userId           String
+  courseId         String
+  verificationToken String   @unique @default(uuid())
+  issuedAt         DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id])
+  course           Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+}
