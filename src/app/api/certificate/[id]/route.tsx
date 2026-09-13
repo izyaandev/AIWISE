@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { Document, Page, Text, View, StyleSheet, Image as PdfImage, renderToBuffer, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image as PdfImage, renderToBuffer, Svg, Circle, Line, Path, Polygon } from '@react-pdf/renderer';
 import fs from 'fs';
 import path from 'path';
 
@@ -149,6 +149,37 @@ const styles = StyleSheet.create({
   }
 });
 
+const TechDoodles = () => (
+  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0 }}>
+    <Svg height="595" width="842">
+      {/* Scattered dots */}
+      <Circle cx="100" cy="100" r="2" fill="#38BDF8" opacity={0.5} />
+      <Circle cx="120" cy="90" r="1.5" fill="#38BDF8" opacity={0.3} />
+      <Circle cx="80" cy="110" r="1" fill="#38BDF8" opacity={0.6} />
+      
+      <Circle cx="700" cy="150" r="3" fill="#38BDF8" opacity={0.4} />
+      <Circle cx="750" cy="450" r="2" fill="#38BDF8" opacity={0.5} />
+      <Circle cx="150" cy="500" r="2" fill="#38BDF8" opacity={0.3} />
+      
+      {/* Abstract tech grid lines */}
+      <Line x1="0" y1="80" x2="250" y2="80" stroke="#38BDF8" strokeWidth="0.5" opacity={0.3} />
+      <Line x1="80" y1="0" x2="80" y2="200" stroke="#38BDF8" strokeWidth="0.5" opacity={0.3} />
+      
+      <Line x1="550" y1="520" x2="842" y2="520" stroke="#38BDF8" strokeWidth="0.5" opacity={0.3} />
+      <Line x1="720" y1="350" x2="720" y2="595" stroke="#38BDF8" strokeWidth="0.5" opacity={0.3} />
+      
+      {/* Plus signs for targeting/tech aesthetic */}
+      <Path d="M 500 120 L 510 120 M 505 115 L 505 125" stroke="#38BDF8" strokeWidth="1" opacity={0.6} />
+      <Path d="M 150 350 L 160 350 M 155 345 L 155 355" stroke="#38BDF8" strokeWidth="1" opacity={0.6} />
+      <Path d="M 650 250 L 656 250 M 653 247 L 653 253" stroke="#38BDF8" strokeWidth="1" opacity={0.5} />
+
+      {/* Hexagons */}
+      <Polygon points="730,80 740,75 750,80 750,90 740,95 730,90" stroke="#38BDF8" strokeWidth="0.5" fill="none" opacity={0.5} />
+      <Polygon points="80,400 90,395 100,400 100,410 90,415 80,410" stroke="#38BDF8" strokeWidth="0.5" fill="none" opacity={0.5} />
+    </Svg>
+  </View>
+);
+
 const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
   const studentName = (certificate.user.name || certificate.user.email).toUpperCase();
   const dateStr = certificate.issuedAt.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -158,6 +189,8 @@ const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
       <Page size="A4" orientation="landscape" style={styles.page}>
         {/* By adding fixed=true, React-PDF treats the image as a background without breaking flow */}
         {templateSrc && <PdfImage src={templateSrc} style={styles.background} fixed={true} />}
+
+        <TechDoodles />
 
         <View style={styles.container}>
           {/* Header */}
