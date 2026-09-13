@@ -26,6 +26,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
     }
 
+    const existingCompletion = await prisma.mediaCompletion.findUnique({
+      where: {
+        userId_lessonId: {
+          userId: (session.user as any).id,
+          lessonId,
+        }
+      }
+    });
+
+    if (existingCompletion?.isCompleted) {
+      return NextResponse.json({ success: true, isCompleted: true });
+    }
+
     // Determine completion logic
     let isCompleted = true;
     if (lesson.mediaType === 'VIDEO') {

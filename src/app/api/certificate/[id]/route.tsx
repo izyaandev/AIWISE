@@ -213,10 +213,10 @@ const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
           {/* Footer */}
           <View style={styles.footer}>
             <View style={styles.signatureBlock}>
-              <Text style={styles.signatureText}>S. Thomas</Text>
+              <Text style={styles.signatureText}>Dr. A. Murthy</Text>
               <View style={styles.signatureLine} />
               <Text style={styles.footerTitle}>Authorized By</Text>
-              <Text style={styles.footerText}>Sanjeev Thomas, Principal</Text>
+              <Text style={styles.footerText}>Dr. Anjuly Murthy, Principal</Text>
             </View>
 
             <View style={styles.centerBlock}>
