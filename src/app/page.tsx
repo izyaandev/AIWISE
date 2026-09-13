@@ -1,15 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { prisma } from '@/lib/prisma';
 import styles from './landing.module.css';
 
 export default async function LandingPage() {
-  const courses = await prisma.course.findMany({
-    take: 3,
-    orderBy: { createdAt: 'desc' }
-  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
