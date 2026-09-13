@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
     "bcryptjs": "^3.0.3",
     "next": "16.3.5",
     "next-auth": "^4.24.15",
