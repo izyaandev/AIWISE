@@ -10,9 +10,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { surveyId, courseId, answers } = await req.json();
+    const { courseId } = await req.json();
 
-    if (!courseId || !surveyId || !answers) {
+    if (!courseId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -25,25 +25,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'You must finish the course before submitting the survey.' }, { status: 403 });
     }
 
-    // Save the survey response
-    await prisma.surveyResponse.upsert({
-      where: {
-        userId_surveyId: {
-          userId: user.id,
-          surveyId
-        }
-      },
-      update: {
-        answers: JSON.stringify(answers)
-      },
-      create: {
-        userId: user.id,
-        surveyId,
-        answers: JSON.stringify(answers)
-      }
-    });
-
-    // Generate the certificate since they've now completed the survey
+    // We no longer track individual survey responses here since they use MS Forms
+    // Just generate the certificate since they've clicked "I have completed the survey"
     const cert = await prisma.certificate.upsert({
       where: { userId_courseId: { userId: user.id, courseId } },
       update: {},

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import { Navbar } from "@/components/Navbar";
+import { getStudentSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "AIWISE | Course Platform",
@@ -13,11 +14,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const studentUser = await getStudentSession();
+  
   return (
     <html lang="en">
       <body className="theme-maximalist" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <AuthProvider>
-          <Navbar />
+          <Navbar studentName={studentUser?.name} isAdmin={studentUser?.role === 'ADMIN'} />
           <main id="main-content" style={{ flex: 1 }} aria-label="Main Content">
             {children}
           </main>
