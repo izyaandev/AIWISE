@@ -18,7 +18,7 @@ async function checkLogin() {
 
   console.log('User found:', user.email, 'Role:', user.role);
 
-  const isValid = await bcrypt.compare(password, user.passwordHash);
+  const isValid = await bcrypt.compare(password, user.passwordHash || '');
   console.log('Password valid?:', isValid);
 }
 

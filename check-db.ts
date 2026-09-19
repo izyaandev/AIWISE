@@ -11,8 +11,8 @@ async function main() {
     console.log(`  Hash: ${user.passwordHash}`);
     
     // Test the passwords
-    const testAdmin = bcrypt.compareSync('admin123', user.passwordHash);
-    const testStudent = bcrypt.compareSync('student123', user.passwordHash);
+    const testAdmin = bcrypt.compareSync('admin123', user.passwordHash || '');
+    const testStudent = bcrypt.compareSync('student123', user.passwordHash || '');
     
     console.log(`  Matches admin123? ${testAdmin}`);
     console.log(`  Matches student123? ${testStudent}`);
