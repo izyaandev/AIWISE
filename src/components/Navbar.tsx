@@ -8,6 +8,8 @@ export function Navbar({ studentName, isAdmin }: { studentName?: string | null, 
   const { data: session } = useSession();
 
   const isUserAuthenticated = !!session?.user || !!studentName;
+
+  return (
     <nav 
       role="navigation"
       aria-label="Main Navigation"
