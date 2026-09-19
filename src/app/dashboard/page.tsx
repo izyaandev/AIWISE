@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../api/auth/[...nextauth]/route';
+import { getStudentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -7,14 +8,21 @@ import { Badge } from '@/components/ui/Badge';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  let user = await getStudentSession();
   
-  if (!session?.user) {
-    return <div>Not authenticated</div>;
+  if (!user) {
+    const session = await getServerSession(authOptions);
+    if (session?.user) {
+      user = await prisma.user.findUnique({ where: { email: session.user.email! } });
+    }
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email! },
+  if (!user) {
+    return <div>Not authenticated. Please <Link href="/student-login">login here</Link>.</div>;
+  }
+
+  const fullUser = await prisma.user.findUnique({
+    where: { id: user.id },
     include: {
       courseProgresses: {
         include: {
@@ -24,17 +32,21 @@ export default async function DashboardPage() {
     },
   });
 
+  if (!fullUser) {
+    return <div>User not found.</div>;
+  }
+
   // Auto-assign any newly added courses to the user for this MVP
   const allCourses = await prisma.course.findMany();
-  let courses = user?.courseProgresses || [];
-  const assignedCourseIds = new Set(courses.map(cp => cp.courseId));
+  let courses = fullUser.courseProgresses;
+  const assignedCourseIds = new Set(courses.map((cp: any) => cp.courseId));
   
   let needsRefetch = false;
   for (const course of allCourses) {
     if (!assignedCourseIds.has(course.id)) {
       await prisma.courseProgress.create({
         data: {
-          userId: user!.id,
+          userId: fullUser.id,
           courseId: course.id,
           lessonsCompleted: 0,
           overallPercentage: 0,
@@ -46,7 +58,7 @@ export default async function DashboardPage() {
 
   if (needsRefetch) {
     const updatedUser = await prisma.user.findUnique({
-      where: { email: session.user.email! },
+      where: { id: fullUser.id },
       include: {
         courseProgresses: {
           include: { course: true },
@@ -58,7 +70,7 @@ export default async function DashboardPage() {
 
   // Fetch user's certificates for sharing transcripts
   const certificates = await prisma.certificate.findMany({
-    where: { userId: user!.id },
+    where: { userId: fullUser.id },
   });
   const certByCourseId = new Map(certificates.map(c => [c.courseId, c]));
 
@@ -74,7 +86,7 @@ export default async function DashboardPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '64px' }}>
-        {courses.map((progress) => {
+        {courses.map((progress: any) => {
           const cert = certByCourseId.get(progress.courseId);
           return (
             <Card key={progress.id} variant="base" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>

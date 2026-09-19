@@ -10,9 +10,12 @@ datasource db {
 
 model User {
   id                 String              @id @default(cuid())
-  email              String              @unique
+  email              String?             @unique
+  deviceId           String?             @unique
   name               String?
-  passwordHash       String
+  className          String?
+  section            String?
+  passwordHash       String?
   role               String              @default("STUDENT") // STUDENT or ADMIN
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt

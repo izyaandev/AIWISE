@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getStudentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
@@ -9,13 +10,19 @@ import Link from 'next/link';
 
 export default async function CourseOverviewPage(props: { params: Promise<{ courseId: string }> }) {
   const params = await props.params;
-  const session = await getServerSession(authOptions);
+  const { courseId } = params;
   
-  if (!session?.user) {
-    redirect('/login');
+  let user = await getStudentSession();
+  if (!user) {
+    const session = await getServerSession(authOptions);
+    if (session?.user) {
+      user = await prisma.user.findUnique({ where: { email: session.user.email! } });
+    }
   }
 
-  const { courseId } = params;
+  if (!user) {
+    return <div>Not authenticated. Please <Link href="/student-login">login here</Link>.</div>;
+  }
 
   const course = await prisma.course.findUnique({
     where: { id: courseId },
@@ -38,7 +45,7 @@ export default async function CourseOverviewPage(props: { params: Promise<{ cour
   const progress = await prisma.courseProgress.findUnique({
     where: {
       userId_courseId: {
-        userId: (session.user as any).id,
+        userId: user.id,
         courseId,
       },
     },
@@ -46,7 +53,7 @@ export default async function CourseOverviewPage(props: { params: Promise<{ cour
 
   const completions = await prisma.mediaCompletion.findMany({
     where: {
-      userId: (session.user as any).id,
+      userId: user.id,
       lesson: {
         module: {
           courseId,
@@ -60,7 +67,7 @@ export default async function CourseOverviewPage(props: { params: Promise<{ cour
   const certificate = await prisma.certificate.findUnique({
     where: {
       userId_courseId: {
-        userId: (session.user as any).id,
+        userId: user.id,
         courseId,
       }
     }

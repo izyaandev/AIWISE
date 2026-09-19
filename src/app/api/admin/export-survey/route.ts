@@ -44,7 +44,7 @@ export async function GET(req: Request) {
     for (const response of responses) {
       const date = response.createdAt.toISOString();
       const name = `"${(response.user.name || '').replace(/"/g, '""')}"`;
-      const email = `"${response.user.email.replace(/"/g, '""')}"`;
+      const email = `"${(response.user?.email || '').replace(/"/g, '""')}"`;
 
       let parsedAnswers: Record<string, string> = {};
       try {

@@ -24,8 +24,13 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        if (!user) {
-          console.log("User not found in DB");
+        if (!user || user.role !== 'ADMIN') {
+          console.log("Admin user not found or not an admin");
+          return null;
+        }
+
+        if (!user.passwordHash) {
+          console.log("No password hash found for user");
           return null;
         }
 
@@ -39,7 +44,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        console.log("Login successful");
+        console.log("Admin login successful");
         return {
           id: user.id,
           email: user.email,

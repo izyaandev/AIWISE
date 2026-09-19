@@ -18,7 +18,7 @@ export default async function LandingPage() {
             The premier AI learning platform for GEMS Our Own High School, Al Warqa'a. Master artificial intelligence with ethics, safety, and rigor.
           </p>
           <div className={styles.heroButtons}>
-            <Link href="/login" style={{ width: '100%', maxWidth: '250px' }}>
+            <Link href="/student-login" style={{ width: '100%', maxWidth: '250px' }}>
               <Button variant="primary" size="lg" style={{ width: '100%', padding: '16px', fontSize: '1.2rem' }}>
                 Start Learning Now
               </Button>

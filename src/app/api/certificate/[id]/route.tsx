@@ -181,7 +181,10 @@ const TechDoodles = () => (
 );
 
 const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
-  const studentName = (certificate.user.name || certificate.user.email).toUpperCase();
+  const studentName = (certificate.user.name || certificate.user.email || 'Student').toUpperCase();
+  const classDetails = certificate.user.className && certificate.user.section 
+    ? `GRADE ${certificate.user.className} - SECTION ${certificate.user.section}`
+    : '';
   const dateStr = certificate.issuedAt.toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
   return (
@@ -204,6 +207,7 @@ const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
           <Text style={styles.certTitle}>Certificate of Excellence</Text>
           
           <Text style={styles.studentName}>{studentName}</Text>
+          {classDetails ? <Text style={{...styles.completionText, marginTop: 10, color: '#38BDF8'}}>{classDetails}</Text> : null}
           <View style={styles.nameUnderline} />
 
           <Text style={styles.completionText}>HAS SUCCESSFULLY COMPLETED THE RIGOROUS REQUIREMENTS OF</Text>

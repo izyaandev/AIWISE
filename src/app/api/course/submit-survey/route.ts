@@ -1,17 +1,16 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getStudentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const user = await getStudentSession();
   
-  if (!session?.user) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { courseId, surveyId, answers } = await req.json();
+    const { surveyId, courseId, answers } = await req.json();
 
     if (!courseId || !surveyId || !answers) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -19,7 +18,7 @@ export async function POST(req: Request) {
 
     // Check if course is actually completed
     const progress = await prisma.courseProgress.findUnique({
-      where: { userId_courseId: { userId: (session.user as any).id, courseId } }
+      where: { userId_courseId: { userId: user.id, courseId } }
     });
 
     if (!progress || progress.overallPercentage < 100) {
@@ -30,7 +29,7 @@ export async function POST(req: Request) {
     await prisma.surveyResponse.upsert({
       where: {
         userId_surveyId: {
-          userId: (session.user as any).id,
+          userId: user.id,
           surveyId
         }
       },
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
         answers: JSON.stringify(answers)
       },
       create: {
-        userId: (session.user as any).id,
+        userId: user.id,
         surveyId,
         answers: JSON.stringify(answers)
       }
@@ -46,10 +45,10 @@ export async function POST(req: Request) {
 
     // Generate the certificate since they've now completed the survey
     const cert = await prisma.certificate.upsert({
-      where: { userId_courseId: { userId: (session.user as any).id, courseId } },
+      where: { userId_courseId: { userId: user.id, courseId } },
       update: {},
       create: {
-        userId: (session.user as any).id,
+        userId: user.id,
         courseId,
       }
     });

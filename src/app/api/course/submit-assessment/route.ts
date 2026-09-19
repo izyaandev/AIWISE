@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getStudentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const user = await getStudentSession();
   
-  if (!session?.user) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -37,7 +36,7 @@ export async function POST(req: Request) {
 
     await prisma.assessmentAttempt.create({
       data: {
-        userId: (session.user as any).id,
+        userId: user.id,
         assessmentId,
         score,
         passed
@@ -49,7 +48,7 @@ export async function POST(req: Request) {
       await prisma.mediaCompletion.upsert({
         where: {
           userId_lessonId: {
-            userId: (session.user as any).id,
+            userId: user.id,
             lessonId,
           }
         },
@@ -57,7 +56,7 @@ export async function POST(req: Request) {
           isCompleted: true
         },
         create: {
-          userId: (session.user as any).id,
+          userId: user.id,
           lessonId,
           isCompleted: true
         }
@@ -77,7 +76,7 @@ export async function POST(req: Request) {
         for (const l of mod.lessons) {
           totalLessons++;
           const comp = await prisma.mediaCompletion.findUnique({
-            where: { userId_lessonId: { userId: (session.user as any).id, lessonId: l.id } }
+            where: { userId_lessonId: { userId: user.id, lessonId: l.id } }
           });
           if (comp?.isCompleted) {
             completedLessons++;
@@ -89,7 +88,7 @@ export async function POST(req: Request) {
       const courseIsCompleted = overallPercentage === 100;
 
       await prisma.courseProgress.upsert({
-        where: { userId_courseId: { userId: (session.user as any).id, courseId } },
+        where: { userId_courseId: { userId: user.id, courseId } },
         update: {
           lessonsCompleted: completedLessons,
           overallPercentage,
@@ -97,7 +96,7 @@ export async function POST(req: Request) {
           completedAt: courseIsCompleted ? new Date() : null,
         },
         create: {
-          userId: (session.user as any).id,
+          userId: user.id,
           courseId,
           lessonsCompleted: completedLessons,
           overallPercentage,
