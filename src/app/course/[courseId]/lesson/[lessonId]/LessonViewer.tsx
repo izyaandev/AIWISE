@@ -140,13 +140,13 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '64px' }}>
         {completed ? (
           nextLessonId ? (
-            <Link href={`/course/${courseId}/lesson/${nextLessonId}`}>
+            <a href={`/course/${courseId}/lesson/${nextLessonId}`} style={{ textDecoration: 'none' }}>
               <Button variant="primary" className="lg">Next Lesson →</Button>
-            </Link>
+            </a>
           ) : (
-            <Link href={`/course/${courseId}`} onClick={() => router.refresh()}>
+            <a href={`/course/${courseId}`} style={{ textDecoration: 'none' }}>
               <Button variant="primary" className="lg">Finish Course ★</Button>
-            </Link>
+            </a>
           )
         ) : (
           <Button 

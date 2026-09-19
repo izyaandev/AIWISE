@@ -55,8 +55,7 @@ export default function QuizClient({ assessment, courseId, lessonId }: any) {
         
         {result.passed ? (
           <Button variant="primary" className="lg" onClick={() => {
-            router.refresh();
-            router.push(`/course/${courseId}`);
+            window.location.href = `/course/${courseId}`;
           }}>
             Continue Course
           </Button>

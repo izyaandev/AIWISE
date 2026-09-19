@@ -100,17 +100,17 @@ export default async function DashboardPage() {
                 </div>
                 
                 {!cert && progress.overallPercentage === 100 ? (
-                  <Link href={`/course/${progress.course.id}/survey`} style={{ width: '100%', display: 'block' }}>
+                  <a href={`/course/${progress.course.id}/survey`} style={{ width: '100%', display: 'block', textDecoration: 'none' }}>
                     <Button variant="primary" style={{ width: '100%', backgroundColor: 'var(--color-success)' }}>
                       Take Final Survey
                     </Button>
-                  </Link>
+                  </a>
                 ) : (
-                  <Link href={`/course/${progress.course.id}`} style={{ width: '100%', display: 'block' }} aria-label={progress.overallPercentage > 0 ? `Continue course ${progress.course.title}` : `Start course ${progress.course.title}`}>
+                  <a href={`/course/${progress.course.id}`} style={{ width: '100%', display: 'block', textDecoration: 'none' }} aria-label={progress.overallPercentage > 0 ? `Continue course ${progress.course.title}` : `Start course ${progress.course.title}`}>
                     <Button variant={progress.overallPercentage > 0 ? 'primary' : 'secondary'} style={{ width: '100%' }}>
                       {progress.overallPercentage > 0 ? 'Continue Learning' : 'Start Course'}
                     </Button>
-                  </Link>
+                  </a>
                 )}
 
                 {cert && (
