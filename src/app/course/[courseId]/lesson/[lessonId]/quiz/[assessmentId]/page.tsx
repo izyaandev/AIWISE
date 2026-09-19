@@ -37,6 +37,10 @@ export default async function QuizPage(props: { params: Promise<{ courseId: stri
     }
   });
 
+  if (previousAttempt) {
+    redirect(`/course/${courseId}`);
+  }
+
   if (!assessment || assessment.lessonId !== lessonId) {
     notFound();
   }
