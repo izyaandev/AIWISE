@@ -65,7 +65,8 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
         }),
       });
       
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.isCompleted) {
         setCompleted(true);
         router.refresh();
       }
