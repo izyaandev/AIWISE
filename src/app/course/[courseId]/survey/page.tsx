@@ -35,8 +35,8 @@ export default function SurveyPage({ params }: { params: Promise<{ courseId: str
       });
       const data = await res.json();
       if (data.success) {
-        // Redirect to dashboard to view certificate
-        window.location.href = '/dashboard';
+        // Redirect to certificate preview page
+        window.location.href = `/course/${courseId}/certificate`;
       } else {
         alert(data.error || 'Failed to claim certificate');
         setSubmitting(false);
