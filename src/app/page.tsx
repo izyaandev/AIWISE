@@ -65,7 +65,14 @@ export default async function LandingPage() {
       {/* Footer */}
       <footer className={styles.footer}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <Image src="/al_warqaa_logo.png" alt="OOW Al Warqa'a" width={100} height={100} style={{ opacity: 0.9, objectFit: 'contain' }} />
+          <img 
+            src="/new_logo.png" 
+            onError={(e) => { (e.target as HTMLImageElement).src = "/al_warqaa_logo.png"; }}
+            alt="OOW Al Warqa'a" 
+            width={200} 
+            height={200} 
+            style={{ opacity: 0.9, objectFit: 'contain' }} 
+          />
           <p className={styles.featureText} style={{ fontSize: '0.9rem', color: 'var(--color-slate)' }}>
             © {new Date().getFullYear()} AIWISE - GEMS Our Own High School, Al Warqa'a. All rights reserved.
           </p>

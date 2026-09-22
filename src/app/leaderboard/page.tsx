@@ -42,14 +42,30 @@ export default async function LeaderboardPage() {
     // 100 points per completed course (certificates)
     points += user.certificates.length * 100;
 
+    // Get completion time of the first course progress (since there's usually only one)
+    const completedAt = user.courseProgresses.find(p => p.isCompleted)?.completedAt;
+
     return {
       id: user.id,
       name: user.name || user.email,
       points,
       certificates: user.certificates.length,
+      completedAt,
       isCurrentUser: user.id === (session.user as any).id
     };
-  }).sort((a, b) => b.points - a.points); // Sort descending by points
+  }).sort((a, b) => {
+    if (b.points !== a.points) {
+      return b.points - a.points; // Sort descending by points
+    }
+    // If points are equal, sort by completion time ascending (earlier is better)
+    if (a.completedAt && b.completedAt) {
+      return a.completedAt.getTime() - b.completedAt.getTime();
+    }
+    // If one has completed and the other hasn't, the completed one ranks higher
+    if (a.completedAt) return -1;
+    if (b.completedAt) return 1;
+    return 0;
+  });
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '64px 32px 120px 32px' }}>
