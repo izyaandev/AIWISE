@@ -35,9 +35,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 30,
     left: '50%',
-    transform: 'translateX(-40)', // roughly center an 80px image
-    width: 80,
-    height: 80,
+    transform: 'translateX(-125)', // roughly center a 250px image
+    width: 250,
+    height: 60,
     zIndex: 10,
   },
   certTitle: {

@@ -68,9 +68,7 @@ export default async function LandingPage() {
           <img 
             src="/new_logo.png" 
             alt="OOW Al Warqa'a" 
-            width={200} 
-            height={200} 
-            style={{ opacity: 0.9, objectFit: 'contain' }} 
+            style={{ opacity: 0.9, objectFit: 'contain', width: '300px', height: 'auto', maxWidth: '100%' }} 
           />
           <p className={styles.featureText} style={{ fontSize: '0.9rem', color: 'var(--color-slate)' }}>
             © {new Date().getFullYear()} AIWISE - GEMS Our Own High School, Al Warqa'a. All rights reserved.
