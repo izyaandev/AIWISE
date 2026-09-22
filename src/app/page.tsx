@@ -66,7 +66,7 @@ export default async function LandingPage() {
       <footer className={styles.footer}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           <img 
-            src="/al_warqaa_logo.png" 
+            src="/new_logo.png" 
             alt="OOW Al Warqa'a" 
             width={200} 
             height={200} 
