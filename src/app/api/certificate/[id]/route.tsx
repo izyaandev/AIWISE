@@ -63,6 +63,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 2,
   },
+  schoolName: {
+    fontSize: 16,
+    color: '#38BDF8',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    marginTop: 5,
+    marginBottom: 10,
+  },
   classDetails: {
     fontSize: 12,
     color: '#38BDF8',
@@ -189,6 +198,7 @@ const CertificateDocument = ({ certificate, templateSrc, logoSrc }: any) => {
           <Text style={styles.presentedTo}>This certificate is proudly presented to</Text>
           
           <Text style={styles.studentName}>{studentName}</Text>
+          <Text style={styles.schoolName}>OUR OWN HIGH SCHOOL, AL WARQA'A</Text>
           <Text style={styles.classDetails}>{classDetails}</Text>
           
           <Text style={styles.completionText}>for successfully completing the</Text>
