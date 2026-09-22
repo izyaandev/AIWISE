@@ -67,7 +67,6 @@ export default async function LandingPage() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           <img 
             src="/new_logo.png" 
-            onError={(e) => { (e.target as HTMLImageElement).src = "/al_warqaa_logo.png"; }}
             alt="OOW Al Warqa'a" 
             width={200} 
             height={200} 
