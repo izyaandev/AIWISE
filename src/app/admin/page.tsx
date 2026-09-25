@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { BulkCreateUsers } from './BulkCreateUsers';
 import { AnalyticsChart } from '@/components/admin/AnalyticsChart';
 import { ClassAnalytics } from '@/components/admin/ClassAnalytics';
+import { SurveyImpactDashboard } from '@/components/admin/SurveyImpactDashboard';
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
@@ -59,6 +60,8 @@ export default async function AdminPage() {
     prisma.survey.findMany({
       include: {
         course: true,
+        questions: true,
+        responses: { include: { user: true } },
         _count: {
           select: { responses: true }
         }
@@ -99,6 +102,137 @@ export default async function AdminPage() {
     avgScore: data.attempts > 0 ? Math.round(data.totalScore / data.attempts) : 0
   }));
 
+  // --- Survey Impact Analytics Preparation ---
+  const isPositive = (ans: string) => {
+    const a = ans.toLowerCase();
+    return a.includes('agree') || a === '5' || a === '4' || a.includes('positive') || a.includes('yes');
+  };
+
+  const getMetricScore = (keywordRegex: RegExp) => {
+    let positive = 0;
+    let total = 0;
+    surveys.forEach(survey => {
+      const targetQuestions = survey.questions.filter(q => keywordRegex.test(q.text));
+      if (targetQuestions.length === 0) return;
+      
+      survey.responses.forEach(response => {
+        let parsedAnswers: Record<string, string> = {};
+        try { parsedAnswers = JSON.parse(response.answers); } catch (e) {}
+        
+        targetQuestions.forEach(q => {
+          if (parsedAnswers[q.id]) {
+            total++;
+            if (isPositive(parsedAnswers[q.id])) positive++;
+          }
+        });
+      });
+    });
+    return total > 0 ? Math.round((positive / total) * 100) : 0;
+  };
+
+  const hasData = (keywordRegex: RegExp) => {
+    return surveys.some(s => s.questions.some(q => keywordRegex.test(q.text)));
+  };
+
+  const studentImpactKeywords = [
+    { metric: 'Understanding responsible AI', regex: /responsible/i },
+    { metric: 'Awareness of limitations', regex: /limitations|incorrect/i },
+    { metric: 'Understanding AI bias', regex: /bias/i },
+    { metric: 'Ability to verify info', regex: /verify/i },
+    { metric: 'Awareness of privacy', regex: /privacy|safety/i },
+    { metric: 'Academic integrity', regex: /integrity|schoolwork/i },
+    { metric: 'Confidence using AI', regex: /confidence|confident/i },
+    { metric: 'Overall AI WISE help', regex: /overall|helped/i },
+  ];
+
+  const behaviouralImpactKeywords = [
+    { metric: 'Will verify info', regex: /verify/i },
+    { metric: 'Will protect info', regex: /protect|personal/i },
+    { metric: 'Will use as support', regex: /support|replace/i },
+    { metric: 'Will follow practices', regex: /practices/i },
+    { metric: 'Will acknowledge use', regex: /acknowledge/i },
+  ];
+
+  const studentImpact = studentImpactKeywords
+    .filter(k => hasData(k.regex))
+    .map(k => ({ metric: k.metric, score: getMetricScore(k.regex) }));
+
+  const behaviouralImpact = behaviouralImpactKeywords
+    .filter(k => hasData(k.regex))
+    .map(k => ({ metric: k.metric, score: getMetricScore(k.regex) }));
+
+  const completedSurveyUsers = new Set();
+  surveys.forEach(s => s.responses.forEach(r => completedSurveyUsers.add(r.userId)));
+
+  const group5to8 = { name: 'Grades 5-8', completed: 0, positiveSurvey: 0, totalSurvey: 0 };
+  const group9to12 = { name: 'Grades 9-12', completed: 0, positiveSurvey: 0, totalSurvey: 0 };
+  
+  userProgress.forEach(user => {
+    const cls = user.className || '';
+    const isCompleted = user.certificates.length > 0;
+    
+    const match = cls.match(/\d+/);
+    let group = null;
+    if (match) {
+      const grade = parseInt(match[0], 10);
+      if (grade >= 5 && grade <= 8) group = group5to8;
+      else if (grade >= 9 && grade <= 12) group = group9to12;
+    }
+
+    if (group && isCompleted) group.completed++;
+  });
+
+  surveys.forEach(survey => {
+    survey.responses.forEach(response => {
+      const user = response.user;
+      if (!user) return;
+      const cls = user.className || '';
+      const match = cls.match(/\d+/);
+      let group = null;
+      if (match) {
+        const grade = parseInt(match[0], 10);
+        if (grade >= 5 && grade <= 8) group = group5to8;
+        else if (grade >= 9 && grade <= 12) group = group9to12;
+      }
+      
+      let parsedAnswers: Record<string, string> = {};
+      try { parsedAnswers = JSON.parse(response.answers); } catch (e) {}
+      
+      let posCount = 0;
+      let totCount = 0;
+      survey.questions.forEach(q => {
+        if (parsedAnswers[q.id]) {
+          totCount++;
+          if (isPositive(parsedAnswers[q.id])) posCount++;
+        }
+      });
+      
+      if (group && totCount > 0 && (posCount / totCount) >= 0.5) {
+        group.positiveSurvey++;
+      }
+    });
+  });
+
+  // Calculate grade-wise completion properly
+  const gradeWiseCompletionMap: Record<string, number> = {};
+  userProgress.forEach(u => {
+      if (u.certificates.length > 0) {
+          const cls = u.className || 'Unassigned';
+          gradeWiseCompletionMap[cls] = (gradeWiseCompletionMap[cls] || 0) + 1;
+      }
+  });
+
+  const impactData = {
+    totalTargeted: totalStudents,
+    completedCourse: userProgress.filter(u => u.certificates.length > 0).length,
+    earnedCertificates: totalCertificates,
+    completedSurvey: completedSurveyUsers.size,
+    gradeWiseCompletion: Object.entries(gradeWiseCompletionMap).map(([name, completed]) => ({ name, completed })),
+    studentImpact: studentImpact.length ? studentImpact : [{ metric: 'No Data', score: 0 }],
+    behaviouralImpact: behaviouralImpact.length ? behaviouralImpact : [{ metric: 'No Data', score: 0 }],
+    comparativeGradeGroup: [group5to8, group9to12]
+  };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '64px 32px 120px 32px' }}>
       {/* Header */}
@@ -113,6 +247,8 @@ export default async function AdminPage() {
           <Button variant="primary" style={{ padding: '12px 32px' }}>+ New Course</Button>
         </Link>
       </div>
+
+      <SurveyImpactDashboard data={impactData} />
 
       {/* Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginBottom: '80px' }}>
@@ -236,32 +372,6 @@ export default async function AdminPage() {
                 )}
               </tbody>
             </table>
-          </div>
-        </Card>
-      </div>
-
-      {/* Survey Results */}
-      <div style={{ marginBottom: '80px' }}>
-        <div style={{ marginBottom: '32px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '16px' }}>
-          <h2 className="heading-3" style={{ color: 'var(--color-ink)' }}>Survey Results</h2>
-          <p className="body-sm" style={{ color: 'var(--color-slate)', marginTop: '8px' }}>Export post-course survey responses collected from students.</p>
-        </div>
-        <Card variant="base" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {surveys.map(survey => (
-              <div key={survey.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid var(--color-hairline)', borderRadius: '8px' }}>
-                <div>
-                  <h3 className="heading-3" style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{survey.course.title}</h3>
-                  <p className="body-sm" style={{ color: 'var(--color-slate)' }}>{survey._count.responses} responses collected</p>
-                </div>
-                <Link href={`/api/admin/export-survey?surveyId=${survey.id}`} target="_blank">
-                  <Button variant="secondary">Download Excel (CSV)</Button>
-                </Link>
-              </div>
-            ))}
-            {surveys.length === 0 && (
-              <p className="body-md" style={{ color: 'var(--color-slate)', textAlign: 'center' }}>No surveys created yet.</p>
-            )}
           </div>
         </Card>
       </div>
