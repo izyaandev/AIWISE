@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { BulkCreateUsers } from './BulkCreateUsers';
+import { AnalyticsChart } from '@/components/admin/AnalyticsChart';
+import { ClassAnalytics } from '@/components/admin/ClassAnalytics';
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
@@ -70,6 +72,33 @@ export default async function AdminPage() {
       )
     : 0;
 
+  // Analytics Data Preparation
+  const enrollmentData = courses.map(c => ({
+    name: c.title,
+    value: c.progresses.length
+  })).filter(d => d.value > 0); // only show courses with enrollments
+
+  const certificatesData = courses.map(c => ({
+    name: c.title,
+    count: c.certificates.length
+  }));
+
+  // Average Score by Class
+  const classScores: Record<string, { totalScore: number, attempts: number }> = {};
+  userProgress.forEach(user => {
+    const cls = user.className || 'Unassigned';
+    if (!classScores[cls]) classScores[cls] = { totalScore: 0, attempts: 0 };
+    user.assessmentAttempts.forEach(attempt => {
+      classScores[cls].totalScore += attempt.score;
+      classScores[cls].attempts += 1;
+    });
+  });
+
+  const classScoreData = Object.entries(classScores).map(([cls, data]) => ({
+    name: cls,
+    avgScore: data.attempts > 0 ? Math.round(data.totalScore / data.attempts) : 0
+  }));
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '64px 32px 120px 32px' }}>
       {/* Header */}
@@ -104,6 +133,33 @@ export default async function AdminPage() {
         ))}
       </div>
 
+      {/* Analytics Charts Grid */}
+      <div style={{ marginBottom: '80px' }}>
+        <div style={{ marginBottom: '32px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '16px' }}>
+          <h2 className="heading-3" style={{ color: 'var(--color-ink)' }}>Analytics Overview</h2>
+          <p className="body-sm" style={{ color: 'var(--color-slate)', marginTop: '8px' }}>Visual metrics of platform engagement and performance.</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+          <AnalyticsChart 
+            title="Course Enrollments" 
+            type="pie" 
+            data={enrollmentData.length > 0 ? enrollmentData : [{ name: 'No Data', value: 1 }]} 
+          />
+          <AnalyticsChart 
+            title="Avg Score by Class" 
+            type="bar" 
+            data={classScoreData} 
+            bars={[{ key: 'avgScore', color: 'var(--color-primary)', name: 'Avg Quiz Score (%)' }]}
+          />
+          <AnalyticsChart 
+            title="Certificates Issued" 
+            type="line" 
+            data={certificatesData} 
+            lines={[{ key: 'count', color: 'var(--color-success)', name: 'Certificates' }]}
+          />
+        </div>
+      </div>
+
       {/* Main content grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', marginBottom: '80px' }}>
         {/* Courses */}
@@ -133,32 +189,9 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        {/* Recent Students */}
+        {/* Student Directory */}
         <div>
-          <div style={{ marginBottom: '32px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '16px' }}>
-            <h2 className="heading-3" style={{ color: 'var(--color-ink)' }}>Recent Students</h2>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {recentUsers.map(u => (
-              <Card key={u.id} variant="base" style={{ padding: '20px 24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <p className="body-md" style={{ fontWeight: 600, margin: '0 0 2px 0', color: 'var(--color-ink)' }}>{u.name || 'No Name'}</p>
-                    <p className="body-sm" style={{ color: 'var(--color-slate)', margin: 0 }}>{u.email}</p>
-                  </div>
-                  <form action={async () => {
-                    'use server';
-                    const { deleteUser } = await import('@/app/actions/admin');
-                    await deleteUser(u.id);
-                  }}>
-                    <button type="submit" style={{ cursor: 'pointer', background: 'transparent', color: 'var(--color-error)', border: '1px solid var(--color-error)', borderRadius: '6px', padding: '4px 12px', fontSize: '0.8rem', fontWeight: 600 }}>
-                      Remove
-                    </button>
-                  </form>
-                </div>
-              </Card>
-            ))}
-          </div>
+          <ClassAnalytics students={userProgress.map(u => ({ id: u.id, name: u.name, email: u.email, className: u.className }))} />
         </div>
       </div>
 
