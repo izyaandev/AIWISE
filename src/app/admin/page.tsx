@@ -108,79 +108,125 @@ export default async function AdminPage() {
     avgScore: data.attempts > 0 ? Math.round(data.totalScore / data.attempts) : 0
   }));
 
-  // --- Scaled Performance Data Calculation ---
-  const baseline = Math.max(1, totalStudents / 10);
-  
+  // --- Real Performance Data Calculation ---
   let totalAttemptsCount = 0;
   let firstAttemptPasses = 0;
   let studentsWithPerfectScore = 0;
   let recoveryStudents = 0;
-  let totalDwellTime = 0;
+  let studentsWithAttempts = 0;
+  
+  let totalPercentageWatched = 0;
   let mediaCompletedCount = 0;
+
+  const scoreBuckets = { '90-100%': 0, '80-89%': 0, '70-79%': 0, 'Below 70%': 0 };
+  const studentEngagement: Record<string, { time: number; totalScore: number; attempts: number }> = {};
   
   userProgress.forEach(u => {
     if (u.assessmentAttempts.length > 0) {
+      studentsWithAttempts++;
       totalAttemptsCount += u.assessmentAttempts.length;
+      
+      // Sort attempts by created date if possible, assuming they are in order
       if (u.assessmentAttempts[0].passed) firstAttemptPasses++;
       if (u.assessmentAttempts.some(a => a.score >= 100)) studentsWithPerfectScore++;
       
       const failedFirst = !u.assessmentAttempts[0].passed;
       const passedLater = u.assessmentAttempts.slice(1).some(a => a.passed);
       if (failedFirst && passedLater) recoveryStudents++;
+
+      u.assessmentAttempts.forEach(a => {
+        if (a.score >= 90) scoreBuckets['90-100%']++;
+        else if (a.score >= 80) scoreBuckets['80-89%']++;
+        else if (a.score >= 70) scoreBuckets['70-79%']++;
+        else scoreBuckets['Below 70%']++;
+
+        if (!studentEngagement[u.id]) studentEngagement[u.id] = { time: 0, totalScore: 0, attempts: 0 };
+        studentEngagement[u.id].totalScore += a.score;
+        studentEngagement[u.id].attempts++;
+      });
     }
 
     u.mediaCompletions.forEach(mc => {
-      totalDwellTime += (mc.dwellTimeSeconds || 0);
+      totalPercentageWatched += (mc.percentageWatched || 0);
       mediaCompletedCount++;
+      if (!studentEngagement[u.id]) studentEngagement[u.id] = { time: 0, totalScore: 0, attempts: 0 };
+      studentEngagement[u.id].time += (mc.dwellTimeSeconds || 0) / 60; // in minutes
     });
   });
 
-  const firstAttemptPassRate = totalAttemptsCount > 0 ? Math.min(98, Math.round(((firstAttemptPasses / totalStudents) * 100) + (baseline * 2))) : 92;
-  const averageEngagementDepth = mediaCompletedCount > 0 ? Math.min(99, Math.round(((mediaCompletedCount / (totalStudents * 5)) * 100) + baseline)) : 95;
-  const perfectScoreRate = totalStudents > 0 ? Math.min(85, Math.round(((studentsWithPerfectScore / totalStudents) * 100) + (baseline * 1.5))) : 78;
-  const knowledgeRetentionRate = totalStudents > 0 ? Math.min(96, Math.round(((recoveryStudents / totalStudents) * 100) + (baseline * 3))) : 88;
+  const firstAttemptPassRate = studentsWithAttempts > 0 ? Math.round((firstAttemptPasses / studentsWithAttempts) * 100) : 0;
+  const averageEngagementDepth = mediaCompletedCount > 0 ? Math.round(totalPercentageWatched / mediaCompletedCount) : 0;
+  const perfectScoreRate = studentsWithAttempts > 0 ? Math.round((studentsWithPerfectScore / studentsWithAttempts) * 100) : 0;
+  
+  let studentsWhoFailedFirst = 0;
+  userProgress.forEach(u => {
+    if (u.assessmentAttempts.length > 0 && !u.assessmentAttempts[0].passed) studentsWhoFailedFirst++;
+  });
+  const knowledgeRetentionRate = studentsWhoFailedFirst > 0 ? Math.round((recoveryStudents / studentsWhoFailedFirst) * 100) : 0;
 
   const moduleMastery = assessments.length > 0 ? assessments.map(a => {
-    const realAvg = a.attempts.length > 0 ? a.attempts.reduce((sum, att) => sum + att.score, 0) / a.attempts.length : 85;
-    return { name: a.lesson?.title || a.title, score: Math.min(98, Math.round(realAvg + baseline)) };
-  }) : [{ name: 'Module 1', score: 92 }, { name: 'Module 2', score: 88 }, { name: 'Module 3', score: 94 }];
+    const realAvg = a.attempts.length > 0 ? a.attempts.reduce((sum, att) => sum + att.score, 0) / a.attempts.length : 0;
+    return { name: a.lesson?.title || a.title, score: Math.round(realAvg) };
+  }) : [{ name: 'No Data', score: 0 }];
 
+  // Knowledge Growth (Mocked since sequential progression data is hard to derive without timestamp tracking per module)
   const knowledgeGrowth = [
-    { name: 'Start (Mod 1)', score: 72 + Math.min(10, baseline) },
-    { name: 'Midpoint (Mod 3)', score: 85 + Math.min(8, baseline) },
-    { name: 'Final (Mod 5)', score: Math.min(99, 92 + baseline) },
+    { name: 'Start', score: 72 },
+    { name: 'Midpoint', score: 85 },
+    { name: 'Final', score: 92 },
   ];
 
-  const gradeConsistencyMap: Record<string, number> = {};
+  const gradeConsistencyMap: Record<string, { totalScore: number, attempts: number }> = {};
   userProgress.forEach(u => {
     const g = u.className || 'General';
-    if (!gradeConsistencyMap[g]) gradeConsistencyMap[g] = 80;
-    gradeConsistencyMap[g] = Math.min(98, gradeConsistencyMap[g] + baseline * 0.5);
+    if (!gradeConsistencyMap[g]) gradeConsistencyMap[g] = { totalScore: 0, attempts: 0 };
+    u.assessmentAttempts.forEach(a => {
+      gradeConsistencyMap[g].totalScore += a.score;
+      gradeConsistencyMap[g].attempts++;
+    });
   });
-  const gradeConsistency = Object.entries(gradeConsistencyMap).map(([name, score]) => ({ name, score: Math.round(score) }));
+  const gradeConsistency = Object.entries(gradeConsistencyMap)
+    .filter(([_, data]) => data.attempts > 0)
+    .map(([name, data]) => ({ name, score: Math.round(data.totalScore / data.attempts) }));
+  
   if (gradeConsistency.length === 0) {
-    gradeConsistency.push({ name: 'Grade 5', score: 88 }, { name: 'Grade 9', score: 92 });
+    gradeConsistency.push({ name: 'No Data', score: 0 });
   }
 
+  // Engagement Vs Performance (Real data bucketing)
+  let lowEng = { time: 0, score: 0, count: 0 };
+  let avgEng = { time: 0, score: 0, count: 0 };
+  let highEng = { time: 0, score: 0, count: 0 };
+  
+  Object.values(studentEngagement).forEach(s => {
+    if (s.attempts > 0) {
+      const avgScore = s.totalScore / s.attempts;
+      if (s.time < 20) { lowEng.time += s.time; lowEng.score += avgScore; lowEng.count++; }
+      else if (s.time < 50) { avgEng.time += s.time; avgEng.score += avgScore; avgEng.count++; }
+      else { highEng.time += s.time; highEng.score += avgScore; highEng.count++; }
+    }
+  });
+
   const engagementVsPerformance = [
-    { name: 'Low Engagers', time: 15, score: 65 + Math.min(10, baseline) },
-    { name: 'Average Engagers', time: 35, score: 85 + Math.min(8, baseline) },
-    { name: 'High Engagers', time: 60 + Math.min(20, baseline * 2), score: Math.min(99, 95 + baseline) },
+    { name: 'Low Engagers (<20m)', time: lowEng.count ? Math.round(lowEng.time/lowEng.count) : 0, score: lowEng.count ? Math.round(lowEng.score/lowEng.count) : 0 },
+    { name: 'Average (20-50m)', time: avgEng.count ? Math.round(avgEng.time/avgEng.count) : 0, score: avgEng.count ? Math.round(avgEng.score/avgEng.count) : 0 },
+    { name: 'High Engagers (>50m)', time: highEng.count ? Math.round(highEng.time/highEng.count) : 0, score: highEng.count ? Math.round(highEng.score/highEng.count) : 0 },
   ];
 
+  // Time in Module (Mocked since MediaCompletion only links to lessons, requiring complex joins to group by module)
   const timeInModule = [
-    { name: 'Intro', minutes: Math.round(12 + baseline) },
-    { name: 'Core Concepts', minutes: Math.round(25 + baseline * 1.5) },
-    { name: 'Deep Dive', minutes: Math.round(35 + baseline * 2) },
-    { name: 'Summary', minutes: Math.round(15 + baseline) },
+    { name: 'Intro', minutes: 12 },
+    { name: 'Core Concepts', minutes: 25 },
+    { name: 'Deep Dive', minutes: 35 },
+    { name: 'Summary', minutes: 15 },
   ];
 
-  const scoreBreakdown = [
-    { name: '90-100%', value: Math.round(40 + baseline * 5) },
-    { name: '80-89%', value: Math.round(35 + baseline * 3) },
-    { name: '70-79%', value: Math.round(15 + baseline) },
-    { name: 'Below 70%', value: Math.round(10) },
-  ];
+  const scoreBreakdown = totalAttemptsCount > 0 ? [
+    { name: '90-100%', value: scoreBuckets['90-100%'] },
+    { name: '80-89%', value: scoreBuckets['80-89%'] },
+    { name: '70-79%', value: scoreBuckets['70-79%'] },
+    { name: 'Below 70%', value: scoreBuckets['Below 70%'] },
+  ] : [{ name: 'No Data', value: 1 }];
 
   const performanceData = {
     firstAttemptPassRate,
@@ -215,12 +261,12 @@ export default async function AdminPage() {
       {/* Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginBottom: '80px' }}>
         {[
-          { label: 'Registered Students', value: totalStudents, color: 'var(--color-primary-dark)' },
-          { label: 'Projected Total', value: 4000, color: 'var(--color-ink)' },
-          { label: 'Certificates Issued', value: Math.max(totalCertificates, Math.round(totalStudents * 0.85)), color: 'var(--color-success)' },
-          { label: 'Quiz Attempts', value: Math.max(totalAttempts, Math.round(totalStudents * 4.2)), color: 'var(--color-primary-dark)' },
-          { label: 'Lessons Completed', value: Math.max(totalCompletions, Math.round(totalStudents * 12.5)), color: 'var(--color-success)' },
-          { label: 'Avg. Quiz Score', value: `${Math.max(avgScore, 92)}%`, color: 'var(--color-ink)' },
+          { label: 'Total Students', value: totalStudents, color: 'var(--color-primary-dark)' },
+          { label: 'Certificates Issued', value: totalCertificates, color: 'var(--color-success)' },
+          { label: 'Active Courses', value: courses.length, color: 'var(--color-ink)' },
+          { label: 'Quiz Attempts', value: totalAttempts, color: 'var(--color-primary-dark)' },
+          { label: 'Lessons Completed', value: totalCompletions, color: 'var(--color-success)' },
+          { label: 'Avg. Quiz Score', value: `${avgScore}%`, color: 'var(--color-ink)' },
         ].map(stat => (
           <Card key={stat.label} variant="base" style={{ padding: '28px' }}>
             <p className="body-sm" style={{ color: 'var(--color-slate)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '0.8rem', fontWeight: 600 }}>
