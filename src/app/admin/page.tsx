@@ -215,10 +215,9 @@ export default async function AdminPage() {
 
   // Time in Module (Mocked since MediaCompletion only links to lessons, requiring complex joins to group by module)
   const timeInModule = [
-    { name: 'Intro', minutes: 12 },
-    { name: 'Core Concepts', minutes: 25 },
-    { name: 'Deep Dive', minutes: 35 },
-    { name: 'Summary', minutes: 15 },
+    { name: 'Responsible AI Use', minutes: 45 },
+    { name: 'AI Ethics', minutes: 55 },
+    { name: 'AI Bias', minutes: 50 },
   ];
 
   const scoreBreakdown = totalAttemptsCount > 0 ? [
