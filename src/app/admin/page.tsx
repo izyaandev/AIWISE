@@ -201,16 +201,16 @@ export default async function AdminPage() {
   Object.values(studentEngagement).forEach(s => {
     if (s.attempts > 0) {
       const avgScore = s.totalScore / s.attempts;
-      if (s.time < 20) { lowEng.time += s.time; lowEng.score += avgScore; lowEng.count++; }
-      else if (s.time < 50) { avgEng.time += s.time; avgEng.score += avgScore; avgEng.count++; }
+      if (s.time < 2) { lowEng.time += s.time; lowEng.score += avgScore; lowEng.count++; }
+      else if (s.time < 4) { avgEng.time += s.time; avgEng.score += avgScore; avgEng.count++; }
       else { highEng.time += s.time; highEng.score += avgScore; highEng.count++; }
     }
   });
 
   const engagementVsPerformance = [
-    { name: 'Low Engagers (<20m)', time: lowEng.count ? Math.round(lowEng.time/lowEng.count) : 0, score: lowEng.count ? Math.round(lowEng.score/lowEng.count) : 0 },
-    { name: 'Average (20-50m)', time: avgEng.count ? Math.round(avgEng.time/avgEng.count) : 0, score: avgEng.count ? Math.round(avgEng.score/avgEng.count) : 0 },
-    { name: 'High Engagers (>50m)', time: highEng.count ? Math.round(highEng.time/highEng.count) : 0, score: highEng.count ? Math.round(highEng.score/highEng.count) : 0 },
+    { name: 'Low Engagers (<2m)', time: lowEng.count ? Math.round(lowEng.time/lowEng.count) : 0, score: lowEng.count ? Math.round(lowEng.score/lowEng.count) : 0 },
+    { name: 'Medium Engagers (<4m)', time: avgEng.count ? Math.round(avgEng.time/avgEng.count) : 0, score: avgEng.count ? Math.round(avgEng.score/avgEng.count) : 0 },
+    { name: 'Active Engagers (4m+)', time: highEng.count ? Math.round(highEng.time/highEng.count) : 0, score: highEng.count ? Math.round(highEng.score/highEng.count) : 0 },
   ];
 
   // Time in Module (Mocked since MediaCompletion only links to lessons, requiring complex joins to group by module)
