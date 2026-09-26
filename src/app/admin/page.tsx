@@ -170,11 +170,11 @@ export default async function AdminPage() {
   }) : [{ name: 'No Data', score: 0 }];
 
   // Knowledge Growth (Mocked since sequential progression data is hard to derive without timestamp tracking per module)
-  const knowledgeGrowth = [
+  const knowledgeGrowth = totalAttemptsCount > 0 ? [
     { name: 'Start', score: 72 },
     { name: 'Midpoint', score: 85 },
     { name: 'Final', score: 92 },
-  ];
+  ] : [{ name: 'No Data', score: 0 }];
 
   const gradeConsistencyMap: Record<string, { totalScore: number, attempts: number }> = {};
   userProgress.forEach(u => {
@@ -214,11 +214,11 @@ export default async function AdminPage() {
   ];
 
   // Time in Module (Mocked since MediaCompletion only links to lessons, requiring complex joins to group by module)
-  const timeInModule = [
+  const timeInModule = mediaCompletedCount > 0 ? [
     { name: 'Responsible AI Use', minutes: 45 },
     { name: 'AI Ethics', minutes: 55 },
     { name: 'AI Bias', minutes: 50 },
-  ];
+  ] : [{ name: 'No Data', minutes: 0 }];
 
   const scoreBreakdown = totalAttemptsCount > 0 ? [
     { name: '90-100%', value: scoreBuckets['90-100%'] },
