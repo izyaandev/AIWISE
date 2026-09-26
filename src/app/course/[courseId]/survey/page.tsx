@@ -16,7 +16,7 @@ export default function SurveyPage({ params }: { params: Promise<{ courseId: str
   }, [params]);
 
   const handleOpenSurvey = () => {
-    window.open('https://forms.cloud.microsoft/r/7FNfUa3HED', '_blank');
+    window.open('https://forms.cloud.microsoft/r/saxTnJQ17J', '_blank');
     setSurveyOpened(true);
   };
 
