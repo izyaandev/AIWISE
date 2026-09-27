@@ -47,19 +47,25 @@ export default async function DashboardPage() {
   const assignedCourseIds = new Set(courses.map((cp: any) => cp.courseId));
   
   let needsRefetch = false;
-  for (const course of allCourses) {
-    // Only assign the course that matches their grade level
-    if (course.title === targetCourseTitle && !assignedCourseIds.has(course.id)) {
-      await prisma.courseProgress.create({
-        data: {
-          userId: fullUser.id,
-          courseId: course.id,
-          lessonsCompleted: 0,
-          overallPercentage: 0,
-        }
-      });
-      needsRefetch = true;
-    }
+  
+  // Try to find the exact target course based on grade
+  let courseToAssign = allCourses.find(c => c.title === targetCourseTitle);
+  // Fallback: If the seed script hasn't been run yet, just use the first available course
+  if (!courseToAssign && allCourses.length > 0) {
+    courseToAssign = allCourses[0];
+  }
+
+  // Only assign the course if they don't already have it
+  if (courseToAssign && !assignedCourseIds.has(courseToAssign.id)) {
+    await prisma.courseProgress.create({
+      data: {
+        userId: fullUser.id,
+        courseId: courseToAssign.id,
+        lessonsCompleted: 0,
+        overallPercentage: 0,
+      }
+    });
+    needsRefetch = true;
   }
 
   if (needsRefetch) {
