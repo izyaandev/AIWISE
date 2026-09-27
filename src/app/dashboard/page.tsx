@@ -36,14 +36,20 @@ export default async function DashboardPage() {
     return <div>User not found.</div>;
   }
 
-  // Auto-assign any newly added courses to the user for this MVP
+  // Parse user grade to determine which course to assign
+  const gradeMatch = fullUser.className?.match(/\d+/);
+  const grade = gradeMatch ? parseInt(gradeMatch[0], 10) : 5; // Default to 5 if not found
+  const targetCourseTitle = grade >= 9 ? 'AI WISE: Artificial Intelligence Course (Grades 9-12)' : 'AI WISE: Artificial Intelligence Course (Grades 5-8)';
+
+  // Auto-assign the appropriate course to the user
   const allCourses = await prisma.course.findMany();
   let courses = fullUser.courseProgresses;
   const assignedCourseIds = new Set(courses.map((cp: any) => cp.courseId));
   
   let needsRefetch = false;
   for (const course of allCourses) {
-    if (!assignedCourseIds.has(course.id)) {
+    // Only assign the course that matches their grade level
+    if (course.title === targetCourseTitle && !assignedCourseIds.has(course.id)) {
       await prisma.courseProgress.create({
         data: {
           userId: fullUser.id,
