@@ -19,11 +19,8 @@ export async function GET() {
       }
     });
 
-    // 2. Self-destruct this route file so it can only be used once
-    const filePath = path.join(process.cwd(), 'src/app/api/reset-students/route.ts');
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    // (Vercel is read-only, so we cannot self-destruct the file here. 
+    // The developer must remove it via a git commit after use.)
 
     return NextResponse.json({ success: true, message: 'All student data reset. This route has now self-destructed.' });
   } catch (error) {
