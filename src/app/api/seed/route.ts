@@ -19,13 +19,21 @@ export async function GET() {
     await prisma.course.deleteMany();
     await prisma.user.deleteMany();
 
-    // 2. Create Admin and Student
-    const hash = bcrypt.hashSync('admin123', 10);
-    const studentHash = bcrypt.hashSync('student123', 10);
+    // 2. Create Admin and Student from env variables
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@school.edu';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const studentPassword = process.env.STUDENT_PASSWORD || 'student123';
+
+    if (adminPassword === 'admin123' || studentPassword === 'student123') {
+      console.warn('WARNING: Using default hardcoded passwords for seed. Please set ADMIN_PASSWORD and STUDENT_PASSWORD in your environment variables.');
+    }
+
+    const hash = bcrypt.hashSync(adminPassword, 10);
+    const studentHash = bcrypt.hashSync(studentPassword, 10);
 
     await prisma.user.create({
       data: {
-        email: 'admin@school.edu',
+        email: adminEmail,
         name: 'School Admin',
         passwordHash: hash,
         role: 'ADMIN'
