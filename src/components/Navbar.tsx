@@ -57,7 +57,7 @@ export function Navbar({ studentName, isAdmin }: { studentName?: string | null, 
             <Link href="/leaderboard" className="body-md-medium" style={{ color: 'var(--color-ink)', textDecoration: 'none', fontWeight: 500, transition: 'color 0.2s' }}>
               Leaderboard
             </Link>
-            {session?.user?.role === 'ADMIN' && (
+            {isAdmin && (
               <Link href="/admin" className="body-md-medium" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}>
                 Admin
               </Link>
@@ -83,7 +83,7 @@ export function Navbar({ studentName, isAdmin }: { studentName?: string | null, 
             >
               {studentName || session?.user?.name || session?.user?.email}
             </span>
-            {session?.user?.role === 'ADMIN' && (
+            {isAdmin && (
               <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: '/login' })} aria-label="Log out" style={{ padding: '6px 16px', fontSize: '0.85rem' }}>
                 Logout
               </Button>

@@ -5,11 +5,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 
+import { getStudentSession } from '@/lib/auth';
+
 export default async function LeaderboardPage() {
   const session = await getServerSession(authOptions);
+  const student = await getStudentSession();
   
-  if (!session?.user) {
-    redirect('/login');
+  if (!session?.user && !student) {
+    redirect('/student-login');
   }
 
   // Calculate points: 10 points per completed lesson, 50 points per completed assessment, 100 points per completed course
