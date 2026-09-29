@@ -54,7 +54,7 @@ export default async function LeaderboardPage() {
       points,
       certificates: user.certificates.length,
       completedAt,
-      isCurrentUser: user.id === (session.user as any).id
+      isCurrentUser: user.id === (session?.user as any)?.id || user.id === student?.id
     };
   }).sort((a, b) => {
     if (b.points !== a.points) {
