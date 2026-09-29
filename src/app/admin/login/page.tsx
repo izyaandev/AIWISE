@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@school.edu"
+              placeholder="Enter admin email address"
               aria-required="true"
               required 
               style={{ width: '92%' }}
