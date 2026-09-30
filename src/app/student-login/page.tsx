@@ -10,7 +10,6 @@ export default function StudentLoginPage() {
   const [section, setSection] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [retryMessage, setRetryMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,45 +20,29 @@ export default function StudentLoginPage() {
     
     setLoading(true);
     setError('');
-    setRetryMessage('');
 
-    let attempts = 0;
-    const maxAttempts = 3;
+    try {
+      const res = await fetch('/api/auth/student-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, className, section }),
+      });
 
-    while (attempts < maxAttempts) {
-      try {
-        const res = await fetch('/api/auth/student-login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name, className, section }),
-        });
-        
-        if (!res.ok) throw new Error('Server error');
+      const data = await res.json();
 
-        const data = await res.json();
-
-        if (data.success) {
-          window.location.href = '/dashboard';
-          return;
-        } else {
-          setError(data.error || 'Failed to enter course');
-          setLoading(false);
-          return;
-        }
-      } catch (err) {
-        attempts++;
-        if (attempts >= maxAttempts) {
-          setError('Server is experiencing high traffic. Please try again in a moment.');
-          break;
-        }
-        setRetryMessage(`Server busy. Retrying in 5 seconds... (Attempt ${attempts + 1}/${maxAttempts})`);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+      if (data.success) {
+        // Redirect to dashboard, which will bypass NextAuth because we use getStudentSession
+        window.location.href = '/dashboard';
+      } else {
+        setError(data.error || 'Failed to enter course');
+        setLoading(false);
       }
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
     }
-    setLoading(false);
-    setRetryMessage('');
   };
 
   return (
@@ -75,12 +58,6 @@ export default function StudentLoginPage() {
         {error && (
           <div style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '12px', borderRadius: '6px', marginBottom: '24px', fontSize: '0.9rem' }}>
             {error}
-          </div>
-        )}
-
-        {retryMessage && (
-          <div style={{ backgroundColor: '#fef3c7', color: '#92400e', padding: '12px', borderRadius: '6px', marginBottom: '24px', fontSize: '0.9rem' }}>
-            {retryMessage}
           </div>
         )}
 

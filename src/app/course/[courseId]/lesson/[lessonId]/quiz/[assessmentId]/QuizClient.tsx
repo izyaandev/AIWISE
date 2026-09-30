@@ -9,7 +9,6 @@ export default function QuizClient({ assessment, courseId, lessonId }: any) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [retryMessage, setRetryMessage] = useState('');
   const [result, setResult] = useState<any>(null);
 
   const handleSelect = (questionId: string, option: string) => {
@@ -23,43 +22,25 @@ export default function QuizClient({ assessment, courseId, lessonId }: any) {
       return;
     }
     setSubmitting(true);
-    setRetryMessage('');
     
-    let attempts = 0;
-    const maxAttempts = 3;
-
-    while (attempts < maxAttempts) {
-      try {
-        const res = await fetch('/api/course/submit-assessment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            assessmentId: assessment.id,
-            lessonId,
-            courseId,
-            answers,
-          }),
-        });
-        
-        if (!res.ok) {
-          throw new Error('Server error');
-        }
-        
-        const data = await res.json();
-        setResult(data);
-        break; // Success, exit retry loop
-      } catch (err) {
-        attempts++;
-        if (attempts >= maxAttempts) {
-          setRetryMessage('Failed to submit. Please check your connection and try again.');
-          break;
-        }
-        setRetryMessage(`Server busy. Retrying in 5 seconds... (Attempt ${attempts + 1}/${maxAttempts})`);
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
+    try {
+      const res = await fetch('/api/course/submit-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assessmentId: assessment.id,
+          lessonId,
+          courseId,
+          answers,
+        }),
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
     }
-    
-    setSubmitting(false);
   };
 
   if (result) {
@@ -134,17 +115,10 @@ export default function QuizClient({ assessment, courseId, lessonId }: any) {
         })}
       </div>
 
-      <div style={{ marginTop: '64px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', borderTop: '1px solid var(--color-hairline)', paddingTop: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {retryMessage && (
-            <span className="body-sm-medium" style={{ color: 'var(--color-warning)' }}>
-              {retryMessage}
-            </span>
-          )}
-          <Button variant="primary" className="lg" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? 'Submitting...' : 'Submit Answers'}
-          </Button>
-        </div>
+      <div style={{ marginTop: '64px', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--color-hairline)', paddingTop: '32px' }}>
+        <Button variant="primary" className="lg" onClick={handleSubmit} disabled={submitting}>
+          {submitting ? 'Submitting...' : 'Submit Answers'}
+        </Button>
       </div>
     </div>
   );
