@@ -49,32 +49,49 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
     }
   };
 
+  const [retryMessage, setRetryMessage] = useState('');
+
   const handleComplete = async (percentageWatched = 0, currentDwellTime = dwellTime) => {
-    if (completed) return;
+    if (completed || saving) return;
     setSaving(true);
+    setRetryMessage('');
     
-    try {
-      const res = await fetch('/api/course/complete-lesson', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          lessonId: lesson.id,
-          courseId,
-          percentageWatched,
-          dwellTimeSeconds: currentDwellTime
-        }),
-      });
-      
-      const data = await res.json();
-      if (res.ok && data.isCompleted) {
-        setCompleted(true);
-        router.refresh();
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        const res = await fetch('/api/course/complete-lesson', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            lessonId: lesson.id,
+            courseId,
+            percentageWatched,
+            dwellTimeSeconds: currentDwellTime
+          }),
+        });
+        
+        if (!res.ok) throw new Error('Server error');
+
+        const data = await res.json();
+        if (data.isCompleted) {
+          setCompleted(true);
+          router.refresh();
+        }
+        break; // Success
+      } catch (err) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          setRetryMessage('Failed to save progress. Please check your connection.');
+          break;
+        }
+        setRetryMessage(`Server busy. Retrying in 5 seconds... (Attempt ${attempts + 1}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
     }
+    
+    setSaving(false);
   };
 
   return (
@@ -117,9 +134,16 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
           <div style={{ marginTop: '24px', height: '8px', backgroundColor: 'var(--color-surface)', width: '100%', position: 'relative', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--color-hairline)' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', backgroundColor: 'var(--color-primary)', width: `${Math.min(100, (dwellTime / targetDwellTime) * 100)}%`, transition: 'width 1s linear' }} />
           </div>
-          <p className="body-sm" style={{ color: 'var(--color-slate)', marginTop: '16px' }}>
-            Time spent: {dwellTime}s
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '16px' }}>
+            <p className="body-sm" style={{ color: 'var(--color-slate)', margin: 0 }}>
+              Time spent: {dwellTime}s
+            </p>
+            {retryMessage && (
+              <span className="body-sm-medium" style={{ color: 'var(--color-warning)' }}>
+                {retryMessage}
+              </span>
+            )}
+          </div>
         </Card>
       )}
 
