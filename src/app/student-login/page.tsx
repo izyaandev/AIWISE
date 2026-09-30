@@ -18,6 +18,19 @@ export default function StudentLoginPage() {
       setError('Please fill in all fields');
       return;
     }
+
+    // --- INPUT VALIDATION ---
+    const gradeNum = parseInt(className.trim(), 10);
+    if (isNaN(gradeNum) || gradeNum < 9 || gradeNum > 12) {
+      setError('Invalid Grade. You must enter a number between 9 and 12 (e.g., 9, 10, 11, 12).');
+      return;
+    }
+
+    if (!/^[A-Z]$/.test(section.trim())) {
+      setError('Invalid Section. You must enter a single capitalized letter (e.g., A, B, C).');
+      return;
+    }
+    // ------------------------
     
     setLoading(true);
     setError('');
