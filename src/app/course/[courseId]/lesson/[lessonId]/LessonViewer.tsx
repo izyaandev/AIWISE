@@ -56,6 +56,8 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
     setSaving(true);
     setRetryMessage('');
     
+    // --- RETRY LOGIC (COMMENTED OUT FOR NOW) ---
+    /*
     let attempts = 0;
     const maxAttempts = 3;
 
@@ -89,6 +91,29 @@ export default function LessonViewer({ lesson, courseId, initialCompletion, next
         setRetryMessage(`Server busy. Retrying in 5 seconds... (Attempt ${attempts + 1}/${maxAttempts})`);
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
+    }
+    */
+
+    // --- ORIGINAL LOGIC (ACTIVE) ---
+    try {
+      const res = await fetch('/api/course/complete-lesson', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          lessonId: lesson.id,
+          courseId,
+          percentageWatched,
+          dwellTimeSeconds: currentDwellTime
+        }),
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.isCompleted) {
+        setCompleted(true);
+        router.refresh();
+      }
+    } catch (err) {
+      console.error(err);
     }
     
     setSaving(false);

@@ -25,6 +25,8 @@ export default function QuizClient({ assessment, courseId, lessonId }: any) {
     setSubmitting(true);
     setRetryMessage('');
     
+    // --- RETRY LOGIC (COMMENTED OUT FOR NOW) ---
+    /*
     let attempts = 0;
     const maxAttempts = 3;
 
@@ -57,6 +59,25 @@ export default function QuizClient({ assessment, courseId, lessonId }: any) {
         setRetryMessage(`Server busy. Retrying in 5 seconds... (Attempt ${attempts + 1}/${maxAttempts})`);
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
+    }
+    */
+    
+    // --- ORIGINAL LOGIC (ACTIVE) ---
+    try {
+      const res = await fetch('/api/course/submit-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assessmentId: assessment.id,
+          lessonId,
+          courseId,
+          answers,
+        }),
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
     }
     
     setSubmitting(false);

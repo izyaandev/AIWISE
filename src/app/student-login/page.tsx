@@ -23,6 +23,8 @@ export default function StudentLoginPage() {
     setError('');
     setRetryMessage('');
 
+    // --- RETRY LOGIC (COMMENTED OUT FOR NOW) ---
+    /*
     let attempts = 0;
     const maxAttempts = 3;
 
@@ -58,6 +60,31 @@ export default function StudentLoginPage() {
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
+    */
+    
+    // --- ORIGINAL LOGIC (ACTIVE) ---
+    try {
+      const res = await fetch('/api/auth/student-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, className, section }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.href = '/dashboard';
+      } else {
+        setError(data.error || 'Failed to enter course');
+        setLoading(false);
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
+    }
+    
     setLoading(false);
     setRetryMessage('');
   };
