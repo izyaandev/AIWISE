@@ -272,11 +272,11 @@ export default async function AdminPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginBottom: '80px' }}>
         {[
           { label: 'Total Students', value: totalStudents.toLocaleString(), color: 'var(--color-primary-dark)' },
-          { label: 'Certificates Issued', value: (totalCertificates > 0 ? totalCertificates : Math.round(totalStudents * 0.85)).toLocaleString(), color: 'var(--color-success)' },
+          { label: 'Certificates Issued', value: totalCertificates.toLocaleString(), color: 'var(--color-success)' },
           { label: 'Active Courses', value: courses.length, color: 'var(--color-ink)' },
-          { label: 'Quiz Attempts', value: (totalAttempts > 0 ? totalAttempts : Math.round(totalStudents * 1.4)).toLocaleString(), color: 'var(--color-primary-dark)' },
-          { label: 'Lessons Completed', value: (totalCompletions > 0 ? totalCompletions : Math.round(totalStudents * 2.8)).toLocaleString(), color: 'var(--color-success)' },
-          { label: 'Avg. Quiz Score', value: `${avgScore > 0 ? avgScore : 88}%`, color: 'var(--color-ink)' },
+          { label: 'Quiz Attempts', value: totalAttempts.toLocaleString(), color: 'var(--color-primary-dark)' },
+          { label: 'Lessons Completed', value: totalCompletions.toLocaleString(), color: 'var(--color-success)' },
+          { label: 'Avg. Quiz Score', value: `${avgScore}%`, color: 'var(--color-ink)' },
         ].map(stat => (
           <Card key={stat.label} variant="base" style={{ padding: '28px' }}>
             <p className="body-sm" style={{ color: 'var(--color-slate)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '0.8rem', fontWeight: 600 }}>
