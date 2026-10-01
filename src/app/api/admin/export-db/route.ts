@@ -19,6 +19,13 @@ function cleanGradeString(val: string | null | undefined, index: number): string
   return getRandomStandardGrade(index);
 }
 
+function isBadUsername(name: string | null | undefined, role: string): boolean {
+  if (role === 'ADMIN') return false;
+  if (!name) return true;
+  const trimmed = name.trim();
+  return trimmed.length <= 2 || trimmed.length > 25;
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const secretParam = searchParams.get('secret');
@@ -66,14 +73,21 @@ export async function GET(req: Request) {
       }
     };
 
-    // 2. Perform Deduplication & Grade Normalization
+    // 2. Perform Deduplication, Bad Username Removal & Grade Normalization
     const seenEmails = new Set<string>();
     const seenDeviceIds = new Set<string>();
     const cleanedUsers: typeof users = [];
+    const badUserIds = new Set<string>();
     const duplicateUserIds = new Set<string>();
     let gradesCorrectedCount = 0;
 
     users.forEach((user, index) => {
+      // Check bad username (<= 2 or > 25)
+      if (isBadUsername(user.name, user.role)) {
+        badUserIds.add(user.id);
+        return;
+      }
+
       const emailKey = user.email ? user.email.toLowerCase().trim() : null;
       const deviceKey = user.deviceId ? user.deviceId.trim() : null;
 
@@ -111,7 +125,9 @@ export async function GET(req: Request) {
       summary: {
         totalRawUsers: users.length,
         cleanedUsersCount: cleanedUsers.length,
+        badUsernamesRemoved: badUserIds.size,
         duplicatesRemoved: duplicateUserIds.size,
+        totalUsersRemoved: badUserIds.size + duplicateUserIds.size,
         gradesCorrected: gradesCorrectedCount,
       },
       rawBackup: rawData,
