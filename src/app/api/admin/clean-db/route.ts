@@ -26,6 +26,11 @@ function isBadUsername(name: string | null | undefined, role: string): boolean {
   return trimmed.length <= 2 || trimmed.length > 25;
 }
 
+function normalizeName(name: string | null | undefined): string {
+  if (!name) return '';
+  return name.toLowerCase().replace(/\s+/g, '');
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const secretParam = searchParams.get('secret');
@@ -39,57 +44,98 @@ export async function GET(req: Request) {
   }
 
   try {
-    const allUsers = await prisma.user.findMany();
-
-    const seenEmails = new Set<string>();
-    const seenDeviceIds = new Set<string>();
+    // Fetch all users with counts of their activity to prioritize keeping active accounts
+    const allUsers = await prisma.user.findMany({
+      include: {
+        _count: {
+          select: {
+            courseProgresses: true,
+            mediaCompletions: true,
+            assessmentAttempts: true,
+            certificates: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
 
     const badUserIds: string[] = [];
-    const duplicateUserIds: string[] = [];
-    const usersToUpdate: { id: string; className: string }[] = [];
+    const validUsersMap = new Map<string, typeof allUsers>();
 
-    allUsers.forEach((user, index) => {
-      // Check bad username (length <= 2 or length > 25)
+    // 1. Filter out bad usernames and group valid users by normalized name (lowercase + spaces removed)
+    allUsers.forEach((user) => {
       if (isBadUsername(user.name, user.role)) {
         badUserIds.push(user.id);
         return;
       }
 
-      // Check duplicates
-      const emailKey = user.email ? user.email.toLowerCase().trim() : null;
-      const deviceKey = user.deviceId ? user.deviceId.trim() : null;
-
-      if ((emailKey && seenEmails.has(emailKey)) || (deviceKey && seenDeviceIds.has(deviceKey))) {
-        duplicateUserIds.push(user.id);
+      const key = normalizeName(user.name);
+      if (!key) {
+        badUserIds.push(user.id);
         return;
       }
 
-      if (emailKey) seenEmails.add(emailKey);
-      if (deviceKey) seenDeviceIds.add(deviceKey);
+      if (!validUsersMap.has(key)) {
+        validUsersMap.set(key, []);
+      }
+      validUsersMap.get(key)!.push(user);
+    });
 
-      // Check grade cleanup
+    // 2. Deduplicate: For each group sharing the exact normalized name, keep 1 primary user and remove duplicates
+    const duplicateUserIds: string[] = [];
+    const remainingUsers: typeof allUsers = [];
+
+    validUsersMap.forEach((userGroup) => {
+      if (userGroup.length === 1) {
+        remainingUsers.push(userGroup[0]);
+      } else {
+        // Sort group: Admin first, then highest total activity score, then oldest createdAt
+        userGroup.sort((a, b) => {
+          if (a.role === 'ADMIN') return -1;
+          if (b.role === 'ADMIN') return 1;
+
+          const scoreA = (a._count.courseProgresses * 3) + (a._count.mediaCompletions * 2) + a._count.assessmentAttempts + a._count.certificates;
+          const scoreB = (b._count.courseProgresses * 3) + (b._count.mediaCompletions * 2) + b._count.assessmentAttempts + b._count.certificates;
+
+          if (scoreB !== scoreA) {
+            return scoreB - scoreA; // Highest activity score first
+          }
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(); // Oldest account first
+        });
+
+        // Keep primary user (index 0)
+        remainingUsers.push(userGroup[0]);
+
+        // Mark remaining duplicates for deletion
+        for (let i = 1; i < userGroup.length; i++) {
+          duplicateUserIds.push(userGroup[i].id);
+        }
+      }
+    });
+
+    const userIdsToDelete = Array.from(new Set([...badUserIds, ...duplicateUserIds]));
+
+    // 3. Batch delete duplicate and bad users in chunks of 500
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < userIdsToDelete.length; i += CHUNK_SIZE) {
+      const chunk = userIdsToDelete.slice(i, i + CHUNK_SIZE);
+      await prisma.mediaCompletion.deleteMany({ where: { userId: { in: chunk } } });
+      await prisma.courseProgress.deleteMany({ where: { userId: { in: chunk } } });
+      await prisma.assessmentAttempt.deleteMany({ where: { userId: { in: chunk } } });
+      await prisma.certificate.deleteMany({ where: { userId: { in: chunk } } });
+      await prisma.surveyResponse.deleteMany({ where: { userId: { in: chunk } } });
+      await prisma.user.deleteMany({ where: { id: { in: chunk } } });
+    }
+
+    // 4. Update grades for remaining valid users
+    const usersToUpdate: { id: string; className: string }[] = [];
+    remainingUsers.forEach((user, index) => {
       const cleanedGrade = cleanGradeString(user.className, index);
       if (user.className !== cleanedGrade) {
         usersToUpdate.push({ id: user.id, className: cleanedGrade });
       }
     });
 
-    const userIdsToDelete = Array.from(new Set([...badUserIds, ...duplicateUserIds]));
-
-    // Perform database cleanup transaction
-    if (userIdsToDelete.length > 0) {
-      // 1. Delete associated user progress & attempts to maintain referential integrity
-      await prisma.mediaCompletion.deleteMany({ where: { userId: { in: userIdsToDelete } } });
-      await prisma.courseProgress.deleteMany({ where: { userId: { in: userIdsToDelete } } });
-      await prisma.assessmentAttempt.deleteMany({ where: { userId: { in: userIdsToDelete } } });
-      await prisma.certificate.deleteMany({ where: { userId: { in: userIdsToDelete } } });
-      await prisma.surveyResponse.deleteMany({ where: { userId: { in: userIdsToDelete } } });
-
-      // 2. Delete bad/duplicate users
-      await prisma.user.deleteMany({ where: { id: { in: userIdsToDelete } } });
-    }
-
-    // 3. Update grade fields for valid remaining users
     for (const item of usersToUpdate) {
       await prisma.user.update({
         where: { id: item.id },
@@ -106,7 +152,7 @@ export async function GET(req: Request) {
         duplicatesRemoved: duplicateUserIds.length,
         totalUsersDeleted: userIdsToDelete.length,
         gradesCorrected: usersToUpdate.length,
-        remainingValidUsers: allUsers.length - userIdsToDelete.length
+        remainingValidUsers: remainingUsers.length
       }
     });
 

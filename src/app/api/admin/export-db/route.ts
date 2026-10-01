@@ -26,6 +26,11 @@ function isBadUsername(name: string | null | undefined, role: string): boolean {
   return trimmed.length <= 2 || trimmed.length > 25;
 }
 
+function normalizeName(name: string | null | undefined): string {
+  if (!name) return '';
+  return name.toLowerCase().replace(/\s+/g, '');
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const secretParam = searchParams.get('secret');
@@ -73,9 +78,8 @@ export async function GET(req: Request) {
       }
     };
 
-    // 2. Perform Deduplication, Bad Username Removal & Grade Normalization
-    const seenEmails = new Set<string>();
-    const seenDeviceIds = new Set<string>();
+    // 2. Perform Deduplication (lowercase + space stripping), Bad Username Removal & Grade Normalization
+    const seenNormalizedNames = new Set<string>();
     const cleanedUsers: typeof users = [];
     const badUserIds = new Set<string>();
     const duplicateUserIds = new Set<string>();
@@ -88,16 +92,14 @@ export async function GET(req: Request) {
         return;
       }
 
-      const emailKey = user.email ? user.email.toLowerCase().trim() : null;
-      const deviceKey = user.deviceId ? user.deviceId.trim() : null;
+      const normKey = normalizeName(user.name);
 
-      if ((emailKey && seenEmails.has(emailKey)) || (deviceKey && seenDeviceIds.has(deviceKey))) {
+      if (normKey && seenNormalizedNames.has(normKey)) {
         duplicateUserIds.add(user.id);
         return; // Skip duplicate record
       }
 
-      if (emailKey) seenEmails.add(emailKey);
-      if (deviceKey) seenDeviceIds.add(deviceKey);
+      if (normKey) seenNormalizedNames.add(normKey);
 
       const originalGrade = user.className;
       const cleanedGrade = cleanGradeString(user.className, index);
